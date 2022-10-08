@@ -7,7 +7,7 @@ import java.io.*;
  */
 public class MinecraftServerHandlerImpl implements MinecraftServerHandler{
     private BufferedReader in;
-    private BufferedWriter out;
+    private OutputStreamWriter out;
     private Process process = null;
 
     private Thread msgThread;
@@ -16,6 +16,9 @@ public class MinecraftServerHandlerImpl implements MinecraftServerHandler{
 
     private OnMessage onMessage;
 
+    public MinecraftServerHandlerImpl(Process process) {
+        putProcess(process);
+    }
     @Override
     public String getMessage() {
         try {
@@ -43,18 +46,17 @@ public class MinecraftServerHandlerImpl implements MinecraftServerHandler{
         process.destroy();
     }
 
-    @Override
-    public void putProcess(Process process) {
+    private void putProcess(Process process) {
         if (this.process == null && process.isAlive()) {
             this.process = process;
             this.in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            this.out = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            this.out = new OutputStreamWriter(process.getOutputStream());
             this.msgThread = new Thread(() -> {
                 while (!msgExit) {
                     if (onMessage != null) {
                         try {
                             if(in.read() != -1) {
-                                onMessage.onMessage(in.readLine());
+                                onMessage.message(in.readLine());
                             }
                         } catch (IOException e) {
                             throw new RuntimeException(e);

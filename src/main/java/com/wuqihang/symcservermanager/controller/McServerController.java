@@ -1,8 +1,8 @@
 package com.wuqihang.symcservermanager.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wuqihang.symcservermanager.MCSServerLauncher;
+import com.wuqihang.symcservermanager.MCServerLauncher;
+import com.wuqihang.symcservermanager.ServerProcessManager;
 import com.wuqihang.symcservermanager.pojo.User;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,19 +12,19 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Wuqihang
  */
 @RestController
 public class McServerController {
-    private final MCSServerLauncher launcher;
+    private final MCServerLauncher launcher;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final ServerProcessManager serverProcessManager;
 
-    public McServerController(MCSServerLauncher launcher) {
+    public McServerController(MCServerLauncher launcher, ServerProcessManager serverProcessManager) {
         this.launcher = launcher;
+        this.serverProcessManager = serverProcessManager;
     }
 
     @RequestMapping("launch-server")
@@ -35,12 +35,13 @@ public class McServerController {
         if (!user.isAdmin()) {
             return "Failed";
         }
-        long launch = 0;
+        Process process;
         try {
-            launch = launcher.launch(javaPath, serverPath, other);
+            process = launcher.launch(javaPath, serverPath, other);
+             serverProcessManager.addProcess(process);
         } catch (IOException e) {
             return e.getMessage();
         }
-        return String.valueOf(launch);
+        return process.toString();
     }
 }
