@@ -1,4 +1,4 @@
-package com.wuqihang.symcservermanager.pojo;
+package com.wuqihang.symcservermanager.mc;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MCServerConfig {
+public class MinecraftServerConfig {
     @JsonIgnore
     private int id;
     private String name;

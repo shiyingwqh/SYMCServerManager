@@ -1,17 +1,14 @@
 package com.wuqihang.symcservermanager.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wuqihang.symcservermanager.pojo.User;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.security.Security;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,43 +16,29 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Wuqihang
  */
 @Component
-public class UserServiceImpl implements UserService, DisposableBean {
+public class UserServiceImpl implements UserService {
 
-    private Map<Integer, User> map;
-    private AtomicInteger ids = new AtomicInteger(0);
-    private ObjectMapper mapper;
+    private final Map<Integer, User> map;
+    private final AtomicInteger ids = new AtomicInteger(0);
+    private final ObjectMapper mapper;
     private final File file;
 
     public UserServiceImpl() {
         file = new File("user.json");
         mapper = new ObjectMapper();
         map = new Hashtable<>();
-        String userJson = null;
-        if (file.exists()) {
-            try {
-                Scanner scanner = new Scanner(file);
-                userJson = scanner.next();
-                scanner.close();
-            } catch (FileNotFoundException e) {
-                userJson = null;
+        try {
+            List<User> users = mapper.readValue(file, new TypeReference<List<User>>() {});
+            for (User user : users) {
+                int id = ids.get();
+                user.setId(id);
+                map.put(id,user);
             }
-        }
-        if (userJson == null) {
+        } catch (IOException e) {
             int id = ids.get();
             map.put(id, new User(id, true, "admin", "admin"));
-        } else {
-            try {
-                List<User> users = mapper.readValue(userJson, new TypeReference<List<User>>() {});
-                for (User user : users) {
-                    int id = ids.get();
-                    user.setId(id);
-                    map.put(id,user);
-                }
-            } catch (JsonProcessingException e) {
-                int id = ids.get();
-                map.put(id, new User(id, true, "admin", "admin"));
-            }
         }
+
     }
 
     @Override

@@ -1,13 +1,14 @@
 package com.wuqihang.symcservermanager.services;
 
 import com.wuqihang.symcservermanager.pojo.User;
+import org.springframework.beans.factory.DisposableBean;
 
 import java.util.List;
 
 /**
  * @author Wuqihang
  */
-public interface UserService {
+public interface UserService extends DisposableBean {
     User getUser(int id);
     User getUser(String username);
     List<User> getAllUser();

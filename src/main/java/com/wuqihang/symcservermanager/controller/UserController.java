@@ -21,7 +21,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @RequestMapping("/index")
+    @RequestMapping({"/index", "/"})
     public String index() {
         return "index";
     }
@@ -36,7 +36,7 @@ public class UserController {
         User user = userService.checkUser(username, password);
         if (user != null) {
             HttpSession session = request.getSession();
-            session.setAttribute("user",user);
+            session.setAttribute("user", user);
         } else {
             model.addAttribute("msg", "Username or Password Error");
             return "login";
