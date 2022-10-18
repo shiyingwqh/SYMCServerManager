@@ -2,6 +2,7 @@ package com.wuqihang.symcservermanager.mc;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -49,9 +50,9 @@ public class MinecraftServerLauncher {
             created = file.createNewFile();
         }
         if (created)
-            try(PrintWriter printWriter = new PrintWriter(file, StandardCharsets.UTF_8)) {
+            try (PrintWriter printWriter = new PrintWriter(file, StandardCharsets.UTF_8)) {
                 printWriter.write(EULA);
             }
-        return new MinecraftServerImpl(launch(minecraftServerConfig.getJavaPath(), "-jar " + minecraftServerConfig.getJarPath(), minecraftServerConfig.getOtherParam()));
+        return new MinecraftServerImpl(launch(minecraftServerConfig.getJavaPath() + " -jar", minecraftServerConfig.getJarPath(), minecraftServerConfig.getOtherParam()));
     }
 }

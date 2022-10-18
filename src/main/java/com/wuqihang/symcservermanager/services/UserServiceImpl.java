@@ -28,15 +28,16 @@ public class UserServiceImpl implements UserService {
         mapper = new ObjectMapper();
         map = new Hashtable<>();
         try {
-            List<User> users = mapper.readValue(file, new TypeReference<List<User>>() {});
+            List<User> users = mapper.readValue(file, new TypeReference<List<User>>() {
+            });
             for (User user : users) {
                 int id = ids.get();
                 user.setId(id);
-                map.put(id,user);
+                map.put(id, user);
             }
         } catch (IOException e) {
             int id = ids.get();
-            map.put(id, new User(id, true, "admin", "admin"));
+            map.put(id, new User(id, true, true,"admin", "admin"));
         }
 
     }
@@ -50,7 +51,7 @@ public class UserServiceImpl implements UserService {
     public User getUser(String username) {
         for (int key : map.keySet()) {
             User user = map.get(key);
-            if (user.getUsername().equals(username)){
+            if (user.getUsername().equals(username)) {
                 return user;
             }
         }

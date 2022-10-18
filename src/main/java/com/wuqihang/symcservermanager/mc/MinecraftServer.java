@@ -4,6 +4,8 @@ package com.wuqihang.symcservermanager.mc;
  * @author Wuqihang
  */
 public interface MinecraftServer {
+
+    String getName();
     Process getProcess();
     String getMessage();
 
@@ -13,9 +15,8 @@ public interface MinecraftServer {
 
     boolean isRunning();
 
-    interface OnMessage {
-        void onMessage(String message) throws Exception;
-    }
-    void addOnMessage(OnMessage onMessage);
-    void removeOnMessage(OnMessage onMessage);
+    boolean start();
+
+    void addListener(MinecraftServerMessageListener onMessage);
+    void removeListener(MinecraftServerMessageListener onMessage);
 }

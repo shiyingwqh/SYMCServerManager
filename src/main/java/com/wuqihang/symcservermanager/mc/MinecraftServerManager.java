@@ -3,6 +3,7 @@ package com.wuqihang.symcservermanager.mc;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -14,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Wuqihang
  */
 @Component
+@ConditionalOnProperty(prefix = "mc",name = "single-mode", havingValue = "false")
 public class MinecraftServerManager implements DisposableBean {
     private final Map<Long, Process> processMap;
     private final Map<Long, MinecraftServer> minecraftServerMap;
@@ -87,7 +89,7 @@ public class MinecraftServerManager implements DisposableBean {
         return new ArrayList<>(processMap.keySet());
     }
 
-    public MinecraftServer getServerHandler(long pid) {
+    public MinecraftServer getServer(long pid) {
         return minecraftServerMap.get(pid);
     }
 
@@ -122,6 +124,7 @@ public class MinecraftServerManager implements DisposableBean {
         minecraftServerMap.put(server.getProcess().pid(), server);
         return server;
     }
+
     public MinecraftServer launch(int configId) throws MinecraftServerException {
         MinecraftServerConfig minecraftServerConfig = configs.get(configId);
         if (minecraftServerConfig == null) {
@@ -147,7 +150,7 @@ public class MinecraftServerManager implements DisposableBean {
         }
         try (PrintWriter printWriter = new PrintWriter(file, StandardCharsets.UTF_8)) {
             printWriter.write(mapper.writeValueAsString(configs.values().toArray()));
-         }
+        }
     }
 
 }

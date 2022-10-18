@@ -1,3 +1,13 @@
 spring:
   thymeleaf:
     cache: false
+logging:
+  file:
+    path: log
+    name: log.log
+  pattern:
+    file: "%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%t] %logger : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+
+mc:
+  single-mode: true
+  jar-path: D:\Desktop\servers\server\server.jar

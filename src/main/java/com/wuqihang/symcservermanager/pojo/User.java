@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class User {
     private int id;
     private boolean admin;
+    private boolean _super;
     private String username;
     private String password;
 }

@@ -2,6 +2,9 @@ package com.wuqihang.symcservermanager.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wuqihang.symcservermanager.mc.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,10 +16,12 @@ import java.io.IOException;
  * @author Wuqihang
  */
 @RestController
+@ConditionalOnProperty(prefix = "mc",name = "single-mode", havingValue = "false")
 public class McServerController {
     private final MinecraftServerLauncher launcher;
     private final ObjectMapper mapper = new ObjectMapper();
     private final MinecraftServerManager minecraftServerManager;
+    public boolean singleMode;
 
     public McServerController(MinecraftServerLauncher launcher, MinecraftServerManager minecraftServerManager) {
         this.launcher = launcher;
@@ -41,4 +46,6 @@ public class McServerController {
         }
         return minecraftServer.toString();
     }
+
+
 }

@@ -12,25 +12,32 @@ public class MinecraftServerImpl implements MinecraftServer {
     private BufferedWriter out;
     private final Process process;
 
-    private final Map<OnMessage, Object> onMessageSet = new Hashtable<>();
+    private final Map<MinecraftServerMessageListener, Object> onMessageSet = new Hashtable<>();
 
     private Thread msgThread;
     private static final Object v = new Object();
 
     private boolean msgExit = true;
 
+    private String msgCache;
+
     private MinecraftServerConfig config;
 
-    public MinecraftServerImpl(Process process) {
+    protected MinecraftServerImpl(Process process) {
         this.process = process;
         this.in = new BufferedReader(new InputStreamReader(process.getInputStream()));
         this.out = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
     }
-    public MinecraftServerImpl(Process process,MinecraftServerConfig config) {
+     protected MinecraftServerImpl(Process process,MinecraftServerConfig config) {
         this.process = process;
         this.config = config;
         this.in = new BufferedReader(new InputStreamReader(process.getInputStream()));
         this.out = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+    }
+
+    @Override
+    public String getName() {
+        return config.getName();
     }
 
     @Override
@@ -40,6 +47,9 @@ public class MinecraftServerImpl implements MinecraftServer {
 
     @Override
     public String getMessage() {
+        if (!msgExit) {
+            return msgCache;
+        }
         try {
             return in.readLine();
         } catch (IOException e) {
@@ -71,11 +81,16 @@ public class MinecraftServerImpl implements MinecraftServer {
     }
 
     @Override
-    public void addOnMessage(OnMessage onMessage) {
-        if (onMessage == null || !isRunning()) {
+    public boolean start() {
+        return false;
+    }
+
+    @Override
+    public void addListener(MinecraftServerMessageListener listener) {
+        if (listener == null || !isRunning()) {
             return;
         }
-        onMessageSet.put(onMessage, v);
+        onMessageSet.put(listener, v);
         if (msgExit) {
             msgExit = false;
             if (msgThread != null) {
@@ -83,14 +98,13 @@ public class MinecraftServerImpl implements MinecraftServer {
             }
             msgThread = new Thread(() -> {
                 while (!msgExit && isRunning()) {
-                    String msg;
                     try {
-                        if ((msg = in.readLine()) != null) {
-                            for (OnMessage message : onMessageSet.keySet()) {
+                        if ((msgCache = in.readLine()) != null) {
+                            for (MinecraftServerMessageListener message : onMessageSet.keySet()) {
                                 try {
-                                    message.onMessage(msg + "\n");
+                                    message.message(msgCache + "\n");
                                 } catch (Exception e) {
-                                    removeOnMessage(message);
+                                    removeListener(message);
                                 }
                             }
                         }
@@ -104,7 +118,7 @@ public class MinecraftServerImpl implements MinecraftServer {
     }
 
     @Override
-    public void removeOnMessage(OnMessage onMessage) {
+    public void removeListener(MinecraftServerMessageListener onMessage) {
         if (onMessage == null) {
             return;
         }
