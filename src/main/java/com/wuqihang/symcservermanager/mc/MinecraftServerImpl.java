@@ -1,5 +1,7 @@
 package com.wuqihang.symcservermanager.mc;
 
+import lombok.ToString;
+
 import java.io.*;
 import java.util.Hashtable;
 import java.util.Map;

@@ -18,23 +18,15 @@ import java.io.IOException;
 @RestController
 @ConditionalOnProperty(prefix = "mc",name = "single-mode", havingValue = "false")
 public class McServerController {
-    private final MinecraftServerLauncher launcher;
-    private final ObjectMapper mapper = new ObjectMapper();
     private final MinecraftServerManager minecraftServerManager;
-    public boolean singleMode;
 
-    public McServerController(MinecraftServerLauncher launcher, MinecraftServerManager minecraftServerManager) {
-        this.launcher = launcher;
+    public McServerController(MinecraftServerManager minecraftServerManager) {
         this.minecraftServerManager = minecraftServerManager;
     }
 
     @RequestMapping("launch-server")
     public String launch(@RequestParam("jpath") String javaPath, @RequestParam("spath") String serverPath, Session session) {
-//        User user = (User) session.getAttribute("user");
-//        String[] envs = null;
-//        if (user ==null || !user.isAdmin()) {
-//            return "Failed";
-//        }
+
         MinecraftServer minecraftServer;
         MinecraftServerConfig minecraftServerConfig = new MinecraftServerConfig();
         minecraftServerConfig.setJarPath(javaPath);

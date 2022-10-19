@@ -1,20 +1,19 @@
-import com.wuqihang.symcservermanager.mc.MinecraftServerConfig;
-import com.wuqihang.symcservermanager.mc.MinecraftServerNoneProcessImpl;
+import com.wuqihang.symcservermanager.mc.utils.MinecraftServerDownloader;
 
-import java.util.Scanner;
+import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * @author Wuqihang
  */
 public class Test {
+
     public static void main(String[] args) throws Exception {
-        MinecraftServerConfig config = new MinecraftServerConfig();
-        config.setJarPath("D:\\Desktop\\test\\server.jar");
-        config.setOtherParam("");
-        MinecraftServerNoneProcessImpl server = new MinecraftServerNoneProcessImpl(config);
-        while (true) {
-            System.out.println("::::::" + server.getMessage());
-            Thread.sleep(100);
-        }
+        MinecraftServerDownloader minecraftServerDownloader = new MinecraftServerDownloader();
+        List<String> allId = minecraftServerDownloader.getAllId();
+        System.out.println(allId);
+        System.out.println(minecraftServerDownloader.getUrl(allId.get(0)));
+        Future<Boolean> download = minecraftServerDownloader.download(allId.get(0), "D:\\Desktop");
+        System.out.println(download.get());
     }
 }

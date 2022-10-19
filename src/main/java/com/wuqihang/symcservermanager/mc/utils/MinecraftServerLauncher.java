@@ -1,9 +1,10 @@
-package com.wuqihang.symcservermanager.mc;
+package com.wuqihang.symcservermanager.mc.utils;
 
+import com.wuqihang.symcservermanager.mc.MinecraftServer;
+import com.wuqihang.symcservermanager.mc.MinecraftServerConfig;
+import com.wuqihang.symcservermanager.mc.MinecraftServerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,9 +14,8 @@ import java.nio.charset.StandardCharsets;
 /**
  * @author Wuqihang
  */
-@Component
 public class MinecraftServerLauncher {
-    private static String EULA = "eula=true";
+    private static final String EULA = "eula=true";
     private static final Logger logger = LoggerFactory.getLogger(MinecraftServerLauncher.class);
 
     public static Process launch(File cmd, File file) throws IOException {
