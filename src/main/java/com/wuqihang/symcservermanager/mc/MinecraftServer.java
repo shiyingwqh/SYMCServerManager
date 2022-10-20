@@ -7,6 +7,13 @@ public interface MinecraftServer {
 
     String getName();
     Process getProcess();
+
+    long pid();
+
+    void stop();
+
+    void restart();
+
     String getMessage();
 
     void sendMessage(String msg);
@@ -19,4 +26,5 @@ public interface MinecraftServer {
 
     void addListener(MinecraftServerMessageListener onMessage);
     void removeListener(MinecraftServerMessageListener onMessage);
+
 }

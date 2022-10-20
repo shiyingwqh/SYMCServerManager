@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="container" th:fragment="serverTermianl">
+    <div class="form-control">
+        <label class="form-control"><b>[[${server.getName()}]]</b></label>
+        <div class="ratio ratio-16x9">
+            <iframe src="/terminal/0" width="800px" class="bg-dark"></iframe>
+        </div>
+    </div>
+</div>
+<div th:fragment="bg" style="background-image: url('https://www.minecraft.net/content/dam/games/minecraft/background-images/pdp-hero-bg.png');height: 100vh;width: 100vw;position: fixed;z-index: -1;"></div>
+<div th:fragment="navbar" class="position-fixed  d-flex flex-column flex-shrink-0 p-3 text-white bg-dark vh-100"
+     style="width: 280px;">
+    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+        <span class="fs-4">Sidebar</span>
+    </a>
+    <hr>
+    <ul class="nav nav-pills flex-column mb-auto">
+        <li>
+            <a href="/index" class="nav-link text-white">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </a>
+        </li>
+    </ul>
+</div>
+</body>
+</html>

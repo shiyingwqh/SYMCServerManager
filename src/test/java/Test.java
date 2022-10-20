@@ -9,11 +9,9 @@ import java.util.concurrent.Future;
 public class Test {
 
     public static void main(String[] args) throws Exception {
-        MinecraftServerDownloader minecraftServerDownloader = new MinecraftServerDownloader();
-        List<String> allId = minecraftServerDownloader.getAllId();
-        System.out.println(allId);
-        System.out.println(minecraftServerDownloader.getUrl(allId.get(0)));
-        Future<Boolean> download = minecraftServerDownloader.download(allId.get(0), "D:\\Desktop");
-        System.out.println(download.get());
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        ProcessBuilder notepad = processBuilder.command("notepad");
+        Process start = notepad.start();
+        Process notepad1 = Runtime.getRuntime().exec("notepad");
     }
 }

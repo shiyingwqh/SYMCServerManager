@@ -1,6 +1,6 @@
 package com.wuqihang.symcservermanager.mc;
 
-import lombok.ToString;
+import com.wuqihang.symcservermanager.mc.utils.MinecraftServerLauncher;
 
 import java.io.*;
 import java.util.Hashtable;
@@ -12,25 +12,26 @@ import java.util.Map;
 public class MinecraftServerImpl implements MinecraftServer {
     private BufferedReader in;
     private BufferedWriter out;
-    private final Process process;
+    private Process process;
 
     private final Map<MinecraftServerMessageListener, Object> onMessageSet = new Hashtable<>();
 
     private Thread msgThread;
     private static final Object v = new Object();
 
-    private boolean msgExit = true;
+    private volatile boolean msgExit = true;
 
     private String msgCache;
 
-    private MinecraftServerConfig config;
+    protected MinecraftServerConfig config;
 
     protected MinecraftServerImpl(Process process) {
         this.process = process;
         this.in = new BufferedReader(new InputStreamReader(process.getInputStream()));
         this.out = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
     }
-     protected MinecraftServerImpl(Process process,MinecraftServerConfig config) {
+
+    public MinecraftServerImpl(Process process, MinecraftServerConfig config) {
         this.process = process;
         this.config = config;
         this.in = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -45,6 +46,33 @@ public class MinecraftServerImpl implements MinecraftServer {
     @Override
     public Process getProcess() {
         return process;
+    }
+
+    @Override
+    public long pid() {
+        return process.toHandle().pid();
+    }
+
+    @Override
+    public void stop() {
+        message("Stop Server");
+        destroy();
+    }
+
+    @Override
+    public void restart() {
+        try {
+            if (process.isAlive()) {
+                stop();
+            }
+            MinecraftServerLauncher.restartMinecraftServer(this, config);
+        } catch (IOException ignored) {
+
+        }
+    }
+
+    private void setProcess(Process process) {
+        this.process = process;
     }
 
     @Override
@@ -71,6 +99,8 @@ public class MinecraftServerImpl implements MinecraftServer {
 
     @Override
     public void destroy() {
+        msgExit = true;
+        sendMessage("stop");
         process.destroy();
     }
 
@@ -88,7 +118,7 @@ public class MinecraftServerImpl implements MinecraftServer {
     }
 
     @Override
-    public void addListener(MinecraftServerMessageListener listener) {
+    public synchronized void addListener(MinecraftServerMessageListener listener) {
         if (listener == null || !isRunning()) {
             return;
         }
@@ -102,13 +132,7 @@ public class MinecraftServerImpl implements MinecraftServer {
                 while (!msgExit && isRunning()) {
                     try {
                         if ((msgCache = in.readLine()) != null) {
-                            for (MinecraftServerMessageListener message : onMessageSet.keySet()) {
-                                try {
-                                    message.message(msgCache + "\n");
-                                } catch (Exception e) {
-                                    removeListener(message);
-                                }
-                            }
+                            message(msgCache);
                         }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -119,8 +143,20 @@ public class MinecraftServerImpl implements MinecraftServer {
         }
     }
 
+    private void message(String msg) {
+        for (MinecraftServerMessageListener message : onMessageSet.keySet()) {
+            try {
+                message.message(msg + "\n");
+            } catch (SecurityException e) {
+                break;
+            } catch (Exception e) {
+                removeListener(message);
+            }
+        }
+    }
+
     @Override
-    public void removeListener(MinecraftServerMessageListener onMessage) {
+    public synchronized void removeListener(MinecraftServerMessageListener onMessage) {
         if (onMessage == null) {
             return;
         }

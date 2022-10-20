@@ -21,11 +21,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    @RequestMapping({"/index", "/"})
-    public String index() {
-        return "index";
-    }
-
     @RequestMapping("/login")
     public String login() {
         return "login";
@@ -41,6 +36,12 @@ public class UserController {
             model.addAttribute("msg", "Username or Password Error");
             return "login";
         }
-        return "index";
+        return "redirect:/index";
+    }
+
+    @RequestMapping("/logout")
+    public String logout(HttpSession session) {
+        session.removeAttribute("user");
+        return "redirect:/login";
     }
 }

@@ -1,13 +1,11 @@
 package com.wuqihang.symcservermanager.controller;
 
 import com.wuqihang.symcservermanager.mc.MinecraftServer;
-import com.wuqihang.symcservermanager.mc.MinecraftServerManager;
 import com.wuqihang.symcservermanager.mc.MinecraftServerMessageListener;
-import com.wuqihang.symcservermanager.mc.MinecraftServerNoneProcessImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.util.StringUtils;
 
@@ -23,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Component
 @ServerEndpoint(value = "/socket/{pid}")
-@ConditionalOnProperty(prefix = "mc",name = "single-mode", havingValue = "true")
+@ConditionalOnBean(MinecraftServer.class)
 public class SingleModeWebSocketServer {
     private static final Logger logger = LoggerFactory.getLogger(SingleModeWebSocketServer.class);
     private static ConcurrentHashMap<Integer,SingleModeWebSocketServer> MAP =new ConcurrentHashMap<>();
@@ -42,7 +40,7 @@ public class SingleModeWebSocketServer {
     }
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("pid") long pid) {
+    public void onOpen(Session session, @PathParam("pid") String pid) {
         this.session = session;
         onMessage = this::sendMessage;
         minecraftServer.addListener(onMessage);
@@ -50,7 +48,7 @@ public class SingleModeWebSocketServer {
         MAP.put(id, this);
         logger.info(session.getId() + " connected " + pid);
         try {
-            sendMessage("connected");
+            sendMessage("connected\n");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -71,7 +69,7 @@ public class SingleModeWebSocketServer {
         logger.info(session.getId() + " disconnected");
     }
 
-    public void sendMessage(String msg) throws IOException {
+    public synchronized void sendMessage(String msg) throws IOException {
         this.session.getBasicRemote().sendText(msg);
     }
     @OnError

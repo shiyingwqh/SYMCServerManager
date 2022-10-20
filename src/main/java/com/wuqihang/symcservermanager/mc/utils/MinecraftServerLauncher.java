@@ -9,6 +9,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -44,6 +47,41 @@ public class MinecraftServerLauncher {
     }
 
     public static MinecraftServer launchMinecraftServer(MinecraftServerConfig minecraftServerConfig) throws IOException {
+        checkEula(minecraftServerConfig);
+        Process launch = launch(minecraftServerConfig.getJavaPath() + " -jar", minecraftServerConfig.getJarPath(), minecraftServerConfig.getOtherParam());
+        return new MinecraftServerImpl(launch, minecraftServerConfig);
+    }
+
+    public static MinecraftServer restartMinecraftServer(MinecraftServer minecraftServer, MinecraftServerConfig minecraftServerConfig) throws IOException {
+        if (minecraftServer.isRunning()) {
+            minecraftServer.stop();
+        }
+        Process process = launch(minecraftServerConfig.getJavaPath() + " -jar", minecraftServerConfig.getJarPath(), minecraftServerConfig.getOtherParam());
+        checkEula(minecraftServerConfig);
+        Class<?> minecraftServerClass = minecraftServer.getClass();
+        try {
+            Method setProcess = minecraftServerClass.getDeclaredMethod("setProcess", Process.class);
+            setProcess.setAccessible(true);
+            setProcess.invoke(minecraftServer, process);
+            setProcess.setAccessible(false);
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            logger.warn("Can't Find MinecraftServer Method 'setProcess'");
+            Field[] fields = minecraftServerClass.getDeclaredFields();
+            for (Field field : fields) {
+                if (field.getType().isInstance(Process.class)) {
+                    try {
+                        field.setAccessible(true);
+                        field.set(Process.class, process);
+                        field.setAccessible(false);
+                    } catch (IllegalAccessException ignored) {
+                    }
+                }
+            }
+        }
+        return minecraftServer;
+    }
+
+    private static void checkEula(MinecraftServerConfig minecraftServerConfig) throws IOException {
         File file = new File(minecraftServerConfig.getServerHomePath(), "eula.txt");
         boolean created = false;
         if (!file.exists()) {
@@ -53,6 +91,5 @@ public class MinecraftServerLauncher {
             try (PrintWriter printWriter = new PrintWriter(file, StandardCharsets.UTF_8)) {
                 printWriter.write(EULA);
             }
-        return new MinecraftServerImpl(launch(minecraftServerConfig.getJavaPath() + " -jar", minecraftServerConfig.getJarPath(), minecraftServerConfig.getOtherParam()));
     }
 }

@@ -6,7 +6,7 @@ import com.wuqihang.symcservermanager.mc.MinecraftServerMessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.util.StringUtils;
 
@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Component
 @ServerEndpoint(value = "/socket/{pid}")
-@ConditionalOnProperty(prefix = "mc",name = "single-mode", havingValue = "false")
+@ConditionalOnMissingBean(MinecraftServer.class)
 public class WebSocketServer {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketServer.class);
     private static final AtomicInteger ids = new AtomicInteger(0);
@@ -41,10 +41,10 @@ public class WebSocketServer {
     }
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("pid") long pid) {
+    public void onOpen(Session session, @PathParam("pid") String pid) {
         this.session = session;
-        this.pid = pid;
-        processHandle = minecraftServerManager.getServer(pid);
+        this.pid = Long.parseLong(pid);
+        processHandle = minecraftServerManager.getServer(this.pid);
         if (processHandle == null || !processHandle.isRunning()) {
             return;
         }
@@ -54,7 +54,7 @@ public class WebSocketServer {
         MAP.put(id, this);
         logger.info(session.getId() + " connected " + pid);
         try {
-            sendMessage("connected");
+            sendMessage("connected\n");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -75,7 +75,7 @@ public class WebSocketServer {
         logger.info(session.getId() + " disconnected");
     }
 
-    public void sendMessage(String msg) throws IOException {
+    public synchronized void sendMessage(String msg) throws IOException {
         this.session.getBasicRemote().sendText(msg);
     }
     @OnError
