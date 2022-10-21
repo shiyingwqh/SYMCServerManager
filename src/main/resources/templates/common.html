@@ -9,7 +9,7 @@
     <div class="form-control">
         <label class="form-control"><b>[[${server.getName()}]]</b></label>
         <div class="ratio ratio-16x9">
-            <iframe src="/terminal/0" width="800px" class="bg-dark"></iframe>
+            <iframe th:src="'/terminal/' + ${sid}" width="800px" class="bg-dark"></iframe>
         </div>
     </div>
 </div>

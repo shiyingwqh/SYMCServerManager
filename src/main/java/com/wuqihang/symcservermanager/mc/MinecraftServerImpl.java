@@ -3,27 +3,24 @@ package com.wuqihang.symcservermanager.mc;
 import com.wuqihang.symcservermanager.mc.utils.MinecraftServerLauncher;
 
 import java.io.*;
-import java.util.Hashtable;
-import java.util.Map;
 
 /**
  * @author Wuqihang
  */
 public class MinecraftServerImpl implements MinecraftServer {
-    private BufferedReader in;
-    private BufferedWriter out;
+    private final BufferedReader in;
+    private final BufferedWriter out;
     private Process process;
 
-    private final Map<MinecraftServerMessageListener, Object> onMessageSet = new Hashtable<>();
+    private MinecraftServerMessageListener listener = null;
 
-    private Thread msgThread;
-    private static final Object v = new Object();
-
-    private volatile boolean msgExit = true;
+    private volatile boolean msgExist = false;
 
     private String msgCache;
 
     protected MinecraftServerConfig config;
+
+    private Thread listenerThread;
 
     protected MinecraftServerImpl(Process process) {
         this.process = process;
@@ -77,7 +74,7 @@ public class MinecraftServerImpl implements MinecraftServer {
 
     @Override
     public String getMessage() {
-        if (!msgExit) {
+        if (listener != null && msgCache != null) {
             return msgCache;
         }
         try {
@@ -99,7 +96,7 @@ public class MinecraftServerImpl implements MinecraftServer {
 
     @Override
     public void destroy() {
-        msgExit = true;
+        msgExist = true;
         sendMessage("stop");
         process.destroy();
     }
@@ -118,51 +115,29 @@ public class MinecraftServerImpl implements MinecraftServer {
     }
 
     @Override
-    public synchronized void addListener(MinecraftServerMessageListener listener) {
-        if (listener == null || !isRunning()) {
-            return;
-        }
-        onMessageSet.put(listener, v);
-        if (msgExit) {
-            msgExit = false;
-            if (msgThread != null) {
-                msgThread.stop();
-            }
-            msgThread = new Thread(() -> {
-                while (!msgExit && isRunning()) {
-                    try {
-                        if ((msgCache = in.readLine()) != null) {
-                            message(msgCache);
-                        }
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+    public synchronized void setListener(MinecraftServerMessageListener listener) {
+        this.listener = listener;
+        if (listener != null) {
+            listenerThread = new Thread(() -> {
+                while (process.isAlive()) {
+                    String message = getMessage();
+                    message(message);
                 }
             });
-            msgThread.start();
+            if (!listenerThread.isAlive()) {
+                listenerThread.start();
+            }
         }
     }
 
     private void message(String msg) {
-        for (MinecraftServerMessageListener message : onMessageSet.keySet()) {
+        if (this.listener != null) {
             try {
-                message.message(msg + "\n");
-            } catch (SecurityException e) {
-                break;
-            } catch (Exception e) {
-                removeListener(message);
+                if ((msgCache = in.readLine()) != null){
+                    this.listener.message(msgCache);
+                }
+            } catch (Exception ignored) {
             }
-        }
-    }
-
-    @Override
-    public synchronized void removeListener(MinecraftServerMessageListener onMessage) {
-        if (onMessage == null) {
-            return;
-        }
-        onMessageSet.remove(onMessage);
-        if (onMessageSet.isEmpty()) {
-            msgExit = true;
         }
     }
 

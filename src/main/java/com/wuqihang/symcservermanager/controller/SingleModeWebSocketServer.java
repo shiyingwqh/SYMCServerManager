@@ -10,26 +10,37 @@ import org.springframework.stereotype.Component;
 import org.thymeleaf.util.StringUtils;
 
 import javax.websocket.*;
-import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * @author Wuqihang
  */
 @Component
-@ServerEndpoint(value = "/socket/{pid}")
+@ServerEndpoint(value = "/socket/{id}")
 @ConditionalOnBean(MinecraftServer.class)
 public class SingleModeWebSocketServer {
     private static final Logger logger = LoggerFactory.getLogger(SingleModeWebSocketServer.class);
-    private static ConcurrentHashMap<Integer,SingleModeWebSocketServer> MAP =new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, SingleModeWebSocketServer> MAP = new ConcurrentHashMap<>();
+    private boolean closed;
     private Session session;
-    private final AtomicInteger ids = new AtomicInteger(0);
-    private int id;
     private static MinecraftServer minecraftServer;
-    private MinecraftServerMessageListener onMessage;
+    private final static MinecraftServerMessageListener listener = SingleModeWebSocketServer::listener;
+    private static final Queue<SingleModeWebSocketServer> m = new LinkedBlockingQueue<>();
+
+    private static synchronized void listener(String s)  {
+        ArrayList<SingleModeWebSocketServer> servers = new ArrayList<>();
+        while (!m.isEmpty()) {
+            servers.add(m.poll());
+        }
+        servers.forEach(webSocketServer -> {
+            webSocketServer.sendMessage(s);
+        });
+    }
 
     public SingleModeWebSocketServer() {
     }
@@ -40,18 +51,16 @@ public class SingleModeWebSocketServer {
     }
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("pid") String pid) {
-        this.session = session;
-        onMessage = this::sendMessage;
-        minecraftServer.addListener(onMessage);
-        id = ids.get();
-        MAP.put(id, this);
-        logger.info(session.getId() + " connected " + pid);
-        try {
-            sendMessage("connected\n");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    public void onOpen(Session session) {
+        if (MAP.containsKey(session.getId())) {
+            return;
         }
+        this.session = session;
+        minecraftServer.setListener(listener);
+        m.add(this);
+        MAP.put(session.getId(), this);
+        logger.info(session.getId() + " connected ");
+        sendMessage("connected\n");
     }
 
     @OnMessage
@@ -64,16 +73,25 @@ public class SingleModeWebSocketServer {
 
     @OnClose
     public void onClose() {
-        MAP.remove(id);
-        minecraftServer.removeListener(onMessage);
+        MAP.remove(session.getId());
+        closed = true;
         logger.info(session.getId() + " disconnected");
     }
 
-    public synchronized void sendMessage(String msg) throws IOException {
-        this.session.getBasicRemote().sendText(msg);
+    public synchronized void sendMessage(String msg) {
+        if (closed) {
+            return;
+        }
+        m.add(this);
+        try {
+            this.session.getBasicRemote().sendText(msg + "\n");
+        } catch (IOException e) {
+            logger.warn("Session " + session.getId() + " Send Message Failed ",e);
+        }
     }
+
     @OnError
-    public void onError(Throwable throwable){
-        logger.error("",throwable);
+    public void onError(Throwable throwable) {
+        logger.error("", throwable);
     }
 }

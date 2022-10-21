@@ -3,7 +3,6 @@ package com.wuqihang.symcservermanager.mc;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wuqihang.symcservermanager.mc.utils.MinecraftServerLauncher;
-import org.apache.tomcat.util.http.parser.Ranges;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,8 +10,6 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * @author Wuqihang
@@ -42,20 +39,22 @@ public class MinecraftServerManager {
                     server.mkdirs();
                 }
                 if (server.isDirectory()) {
+                    MinecraftServerConfig.MinecraftServerConfigBuilder builder = MinecraftServerConfig.builder();
                     for (File listFile : server.listFiles()) {
                         if (listFile.isDirectory()) {
                             File serverJar = new File(listFile, "server.jar");
                             if (!serverJar.exists()) {
                                 continue;
                             }
-                            MinecraftServerConfig config = new MinecraftServerConfig();
-                            config.setJavaPath(System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
-                            config.setJarPath(new File(listFile, "server.jar").getAbsolutePath());
-                            config.setServerHomePath(listFile.getAbsolutePath());
-                            config.setName(listFile.getName());
-                            config.setOtherParam("");
-                            config.setComment("");
-                            config.setId(ids.get());
+
+                            builder.javaPath(System.getProperty("java.home") + File.separator + "bin" + File.separator + "java")
+                                    .jarPath(new File(listFile, "server.jar").getAbsolutePath())
+                                    .serverHomePath(listFile.getAbsolutePath())
+                                    .name(listFile.getName())
+                                    .otherParam("")
+                                    .comment("")
+                                    .id(ids.get());
+                            MinecraftServerConfig config = builder.build();
                             configs.put(config.getId(), config);
                         }
                     }
@@ -67,7 +66,7 @@ public class MinecraftServerManager {
     }
 
 
-    public MinecraftServer getServer(long id) {
+    public MinecraftServer getServer(int id) {
         return servers.get(id);
     }
 
@@ -135,7 +134,7 @@ public class MinecraftServerManager {
 
     public void put(MinecraftServer minecraftServer, MinecraftServerConfig config) throws MinecraftServerException {
         if (configs.containsKey(config.getId())) {
-            if (servers.containsKey(config.getId())){
+            if (servers.containsKey(config.getId())) {
                 throw new MinecraftServerException("Server Already In Manager");
             }
         }
@@ -143,9 +142,7 @@ public class MinecraftServerManager {
 
     public void destroy() throws Exception {
         for (MinecraftServer ms : servers.values()) {
-            if (ms.isRunning()) {
-                ms.destroy();
-            }
+            ms.destroy();
         }
         File file = new File("configs.json");
         if (!file.exists()) {
@@ -157,6 +154,6 @@ public class MinecraftServerManager {
     }
 
     public Map<MinecraftServer, MinecraftServerConfig> serverConfigMap() {
-
+        return null;
     }
 }

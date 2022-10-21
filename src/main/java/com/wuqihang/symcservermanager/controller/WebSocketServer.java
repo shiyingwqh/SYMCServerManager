@@ -14,73 +14,101 @@ import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Wuqihang
  */
 @Component
-@ServerEndpoint(value = "/socket/{pid}")
+@ServerEndpoint(value = "/socket/{id}")
 @ConditionalOnMissingBean(MinecraftServer.class)
 public class WebSocketServer {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketServer.class);
     private static final AtomicInteger ids = new AtomicInteger(0);
-    private static ConcurrentHashMap<Integer,WebSocketServer> MAP =new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, WebSocketServer> MAP = new ConcurrentHashMap<>();
     private Session session;
-    private int id;
-    private long pid;
+    private int sid;
+
+    private boolean closed = false;
     private static MinecraftServerManager minecraftServerManager;
-    private MinecraftServer processHandle;
-    private MinecraftServerMessageListener onMessage;
+    private MinecraftServer minecraftServer;
+    private static final Queue<WebSocketServer> m = new LinkedBlockingQueue<>();
+    private static final MinecraftServerMessageListener listener = WebSocketServer::listener;
+
+    private static synchronized void listener(String s) {
+        ArrayList<WebSocketServer> servers = new ArrayList<>();
+        while (!m.isEmpty()) {
+            servers.add(m.poll());
+        }
+        servers.forEach(webSocketServer -> {
+            webSocketServer.sendMessage(s);
+        });
+    }
+
     public WebSocketServer() {
     }
-    @Autowired
+
+    @Autowired()
     public void setServerProcessManager(MinecraftServerManager minecraftServerManager) {
         WebSocketServer.minecraftServerManager = minecraftServerManager;
     }
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("pid") String pid) {
-        this.session = session;
-        this.pid = Long.parseLong(pid);
-        processHandle = minecraftServerManager.getServer(this.pid);
-        if (processHandle == null || !processHandle.isRunning()) {
+    public void onOpen(Session session, @PathParam("pid") String id) {
+        if (MAP.containsKey(session.getId())) {
             return;
         }
-        onMessage = this::sendMessage;
-        processHandle.addListener(onMessage);
-        id = ids.get();
-        MAP.put(id, this);
-        logger.info(session.getId() + " connected " + pid);
-        try {
-            sendMessage("connected\n");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        this.session = session;
+        minecraftServer = minecraftServerManager.getServer(Integer.parseInt(id));
+        if (minecraftServer == null || !minecraftServer.isRunning()) {
+            return;
         }
+        minecraftServer.setListener(listener);
+        m.add(this);
+        sid = Integer.parseInt(id);
+        MAP.put(session.getId(), this);
+        logger.info(session.getId() + " connected " + sid);
+        sendMessage("connected\n");
     }
 
     @OnMessage
     public void onMessage(String msg, Session session) {
         if (!StringUtils.isEmptyOrWhitespace(msg)) {
-            processHandle.sendMessage(msg + "\r");
-            logger.info(pid + " send: " + msg);
+            minecraftServer.sendMessage(msg + "\r");
+            logger.info(sid + " send: " + msg);
         }
     }
 
     @OnClose
     public void onClose() {
-        MAP.remove(id);
-        processHandle.removeListener(onMessage);
+        MAP.remove(session.getId());
+        closed = true;
         logger.info(session.getId() + " disconnected");
     }
 
-    public synchronized void sendMessage(String msg) throws IOException {
-        this.session.getBasicRemote().sendText(msg);
+    public boolean isClosed() {
+        return closed;
     }
+
+    public synchronized void sendMessage(String msg){
+        if (closed) {
+            return;
+        }
+        m.add(this);
+        try {
+            this.session.getBasicRemote().sendText(msg + "\n");
+        } catch (IOException e) {
+            logger.warn("Session " + session.getId() + "Send Message Failed ",e);
+        }
+    }
+
     @OnError
-    public void onError(Throwable throwable){
-        logger.error("",throwable);
+    public void onError(Throwable throwable) {
+        logger.error("", throwable);
     }
 
 }

@@ -17,7 +17,7 @@
                 <div th:text="${server.pid()}"></div>
             </li>
         </ul>
-        <div th:if="${singleMode}" th:replace="common::serverTermianl(server=${servers.get(0)}),config=">
+        <div th:if="${singleMode}" th:replace="common::serverTermianl(server=${servers.get(0)},sid='0')">
         </div>
     </div>
 </div>

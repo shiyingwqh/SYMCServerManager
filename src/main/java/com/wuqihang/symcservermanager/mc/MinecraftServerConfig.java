@@ -2,6 +2,7 @@ package com.wuqihang.symcservermanager.mc;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.thymeleaf.util.StringUtils;
@@ -12,6 +13,7 @@ import java.io.File;
  * @author Wuqihang
  */
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class MinecraftServerConfig {

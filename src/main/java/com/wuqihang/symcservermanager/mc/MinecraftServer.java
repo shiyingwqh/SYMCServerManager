@@ -24,7 +24,6 @@ public interface MinecraftServer {
 
     boolean start();
 
-    void addListener(MinecraftServerMessageListener onMessage);
-    void removeListener(MinecraftServerMessageListener onMessage);
+    void setListener(MinecraftServerMessageListener onMessage);
 
 }
