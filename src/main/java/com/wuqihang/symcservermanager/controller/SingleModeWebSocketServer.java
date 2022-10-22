@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -25,19 +26,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 @ConditionalOnBean(MinecraftServer.class)
 public class SingleModeWebSocketServer {
     private static final Logger logger = LoggerFactory.getLogger(SingleModeWebSocketServer.class);
-    private static final ConcurrentHashMap<String, SingleModeWebSocketServer> MAP = new ConcurrentHashMap<>();
-    private boolean closed;
     private Session session;
     private static MinecraftServer minecraftServer;
     private final static MinecraftServerMessageListener listener = SingleModeWebSocketServer::listener;
-    private static final Queue<SingleModeWebSocketServer> m = new LinkedBlockingQueue<>();
+    private static final CopyOnWriteArraySet<SingleModeWebSocketServer> set = new CopyOnWriteArraySet<>();
 
     private static synchronized void listener(String s)  {
-        ArrayList<SingleModeWebSocketServer> servers = new ArrayList<>();
-        while (!m.isEmpty()) {
-            servers.add(m.poll());
-        }
-        servers.forEach(webSocketServer -> {
+        set.forEach(webSocketServer -> {
             webSocketServer.sendMessage(s);
         });
     }
@@ -46,21 +41,17 @@ public class SingleModeWebSocketServer {
     }
 
     @Autowired
-    public void setServerProcessManager(MinecraftServer minecraftServer) {
+    public void setMinecraftServer(MinecraftServer minecraftServer) {
         SingleModeWebSocketServer.minecraftServer = minecraftServer;
     }
 
     @OnOpen
     public void onOpen(Session session) {
-        if (MAP.containsKey(session.getId())) {
-            return;
-        }
         this.session = session;
-        minecraftServer.setListener(listener);
-        m.add(this);
-        MAP.put(session.getId(), this);
+        set.add(this);
         logger.info(session.getId() + " connected ");
         sendMessage("connected\n");
+        minecraftServer.setListener(listener);
     }
 
     @OnMessage
@@ -73,18 +64,14 @@ public class SingleModeWebSocketServer {
 
     @OnClose
     public void onClose() {
-        MAP.remove(session.getId());
-        closed = true;
+        set.remove(this);
         logger.info(session.getId() + " disconnected");
     }
 
     public synchronized void sendMessage(String msg) {
-        if (closed) {
-            return;
-        }
-        m.add(this);
         try {
             this.session.getBasicRemote().sendText(msg + "\n");
+            logger.info(msg);
         } catch (IOException e) {
             logger.warn("Session " + session.getId() + " Send Message Failed ",e);
         }

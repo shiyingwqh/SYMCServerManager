@@ -1,14 +1,19 @@
 package com.wuqihang.symcservermanager.mc;
 
+import java.io.IOException;
+
 /**
  * @author Wuqihang
  */
 public interface MinecraftServer {
 
     String getName();
+
     Process getProcess();
 
     long pid();
+
+    void start() throws IOException;
 
     void stop();
 
@@ -21,8 +26,6 @@ public interface MinecraftServer {
     void destroy();
 
     boolean isRunning();
-
-    boolean start();
 
     void setListener(MinecraftServerMessageListener onMessage);
 

@@ -13,6 +13,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * @author Wuqihang
@@ -21,43 +24,17 @@ public class MinecraftServerLauncher {
     private static final String EULA = "eula=true";
     private static final Logger logger = LoggerFactory.getLogger(MinecraftServerLauncher.class);
 
-    public static Process launch(File cmd, File file) throws IOException {
-        String javaPath = cmd.getAbsolutePath();
-        String serverJarPath = file.getAbsolutePath();
-        return launch(javaPath, serverJarPath, null);
+    protected static MinecraftServer launchMinecraftServer(MinecraftServerConfig minecraftServerConfig) throws IOException {
+        MinecraftServerImpl minecraftServer = new MinecraftServerImpl(minecraftServerConfig);
+        minecraftServer.start();
+        return minecraftServer;
     }
 
-    public static Process launch(String cmd, String file) throws IOException {
-        return launch(cmd, file, null);
-    }
-
-
-    public static Process launch(String cmd, String file, String others) throws IOException {
-        StringBuilder cmds = new StringBuilder();
-        cmds.append(cmd).append(' ');
-        cmds.append(file).append(' ');
-        if (others != null) {
-            cmds.append(others).append(' ');
-        }
-        long pid;
-        Process process = Runtime.getRuntime().exec(cmds.toString(), null, new File(file).getParentFile());
-        pid = process.pid();
-        logger.info(file + " run");
-        return process;
-    }
-
-    public static MinecraftServer launchMinecraftServer(MinecraftServerConfig minecraftServerConfig) throws IOException {
-        checkEula(minecraftServerConfig);
-        Process launch = launch(minecraftServerConfig.getJavaPath() + " -jar", minecraftServerConfig.getJarPath(), minecraftServerConfig.getOtherParam());
-        return new MinecraftServerImpl(launch, minecraftServerConfig);
-    }
-
-    public static MinecraftServer restartMinecraftServer(MinecraftServer minecraftServer, MinecraftServerConfig minecraftServerConfig) throws IOException {
+    protected static MinecraftServer restartMinecraftServer(MinecraftServer minecraftServer, MinecraftServerConfig minecraftServerConfig) throws IOException {
         if (minecraftServer.isRunning()) {
             minecraftServer.stop();
         }
-        Process process = launch(minecraftServerConfig.getJavaPath() + " -jar", minecraftServerConfig.getJarPath(), minecraftServerConfig.getOtherParam());
-        checkEula(minecraftServerConfig);
+        Process process = launch(minecraftServerConfig.getJavaPath() + " -jar", minecraftServerConfig.getOtherParam(), minecraftServerConfig.getJarPath());
         Class<?> minecraftServerClass = minecraftServer.getClass();
         try {
             Method setProcess = minecraftServerClass.getDeclaredMethod("setProcess", Process.class);
@@ -81,15 +58,13 @@ public class MinecraftServerLauncher {
         return minecraftServer;
     }
 
-    private static void checkEula(MinecraftServerConfig minecraftServerConfig) throws IOException {
-        File file = new File(minecraftServerConfig.getServerHomePath(), "eula.txt");
-        boolean created = false;
-        if (!file.exists()) {
-            created = file.createNewFile();
+    protected static Process launch(String cmd, String workdir, String... otherCmd) throws IOException {
+        ArrayList<String> cmds = new ArrayList<>();
+        cmds.add(cmd);
+        if (otherCmd != null) {
+            cmds.addAll(Arrays.asList(otherCmd));
         }
-        if (created)
-            try (PrintWriter printWriter = new PrintWriter(file, StandardCharsets.UTF_8)) {
-                printWriter.write(EULA);
-            }
+        ProcessBuilder processBuilder = new ProcessBuilder().command(cmds).directory(new File(workdir).getAbsoluteFile());
+        return processBuilder.start();
     }
 }

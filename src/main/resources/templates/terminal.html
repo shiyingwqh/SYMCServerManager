@@ -43,6 +43,7 @@
             case '\r': // Enter
                 socket.send(command);
                 command = '';
+                term.write('\n')
                 break;
             case '\u007F': // Backspace (DEL)
                 // Do not delete the prompt

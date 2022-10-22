@@ -3,7 +3,7 @@ package com.wuqihang.symcservermanager.controller;
 import com.wuqihang.symcservermanager.mc.MinecraftServer;
 import com.wuqihang.symcservermanager.mc.MinecraftServerConfig;
 import com.wuqihang.symcservermanager.mc.MinecraftServerException;
-import com.wuqihang.symcservermanager.mc.MinecraftServerManager;
+import com.wuqihang.symcservermanager.mc.utils.MinecraftServerManagerImpl;
 import com.wuqihang.symcservermanager.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -25,9 +25,9 @@ import java.util.Map;
 @Controller
 @ConditionalOnMissingBean(MinecraftServer.class)
 public class McServerController {
-    private final MinecraftServerManager minecraftServerManager;
+    private final MinecraftServerManagerImpl minecraftServerManager;
 
-    public McServerController(@Autowired(required = false) MinecraftServerManager minecraftServerManager) {
+    public McServerController(@Autowired(required = false) MinecraftServerManagerImpl minecraftServerManager) {
         this.minecraftServerManager = minecraftServerManager;
     }
 
@@ -60,7 +60,7 @@ public class McServerController {
             return "redirect:/login";
         }
         List<MinecraftServer> servers = minecraftServerManager.getAllServer();
-        Map<MinecraftServer, MinecraftServerConfig> map = minecraftServerManager.serverConfigMap();
+        Map<MinecraftServer, MinecraftServerConfig> map = minecraftServerManager.getServerConfigMap();
         model.addAttribute("servers", servers);
         return "index";
     }

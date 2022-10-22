@@ -10,4 +10,4 @@ logging:
 mc:
   single-mode: true
   auto-start: true
-  jar-path: D:\Desktop\servers\server\server.jar
+  jar-path: /Users/wuqihang/minecraft-server/server.jar

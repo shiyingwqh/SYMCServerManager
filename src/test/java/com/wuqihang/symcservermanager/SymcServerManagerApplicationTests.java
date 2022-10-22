@@ -23,9 +23,6 @@ class SymcServerManagerApplicationTests {
     MinecraftServerConfig config;
     @Test
     void contextLoads() throws IOException, InterruptedException {
-        Thread.sleep(3000);
-        MinecraftServerLauncher.restartMinecraftServer(minecraftServer, config);
-        while (true);
     }
 
 }

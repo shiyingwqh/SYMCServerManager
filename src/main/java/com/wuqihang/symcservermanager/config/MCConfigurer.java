@@ -3,9 +3,10 @@ package com.wuqihang.symcservermanager.config;
 import com.wuqihang.symcservermanager.mc.MinecraftServer;
 import com.wuqihang.symcservermanager.mc.MinecraftServerConfig;
 import com.wuqihang.symcservermanager.mc.MinecraftServerException;
-import com.wuqihang.symcservermanager.mc.MinecraftServerManager;
+import com.wuqihang.symcservermanager.mc.MinecraftServerImpl;
 import com.wuqihang.symcservermanager.mc.utils.MinecraftServerDownloader;
 import com.wuqihang.symcservermanager.mc.utils.MinecraftServerLauncher;
+import com.wuqihang.symcservermanager.mc.utils.MinecraftServerManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,11 +27,12 @@ import java.io.IOException;
 public class MCConfigurer {
     private static final Logger logger = LoggerFactory.getLogger(MCConfigurer.class);
     @Value("${mc.single-mode:false}")
-    private boolean singleMode;
+    private boolean singleMode = false;
     @Value("${mc.auto-start:false}")
-    private boolean autoStart;
+    private boolean autoStart = false;
 
     @Bean
+    @ConditionalOnProperty(prefix = "mc", name = "single-mode", havingValue = "true")
     public MinecraftServerConfig minecraftServerConfig(@Value("${mc.jar-path}") String jarPath) throws MinecraftServerException {
         MinecraftServerConfig config = new MinecraftServerConfig();
         File jar = new File(jarPath);
@@ -42,20 +44,29 @@ public class MCConfigurer {
         config.setJarPath(jar.getAbsolutePath());
         config.setJavaPath(System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
         config.setComment("default");
+        config.setOtherParam("");
         config.setServerHomePath(jar.getParentFile().getAbsolutePath());
         return config;
     }
 
-    @Bean(name = "mc-server", destroyMethod = "destroy")
-    @ConditionalOnProperty(prefix = "mc", name = "auto-start", havingValue = "true")
-    public MinecraftServer minecraftServerNoneProcess(MinecraftServerConfig minecraftServerConfig) throws Exception {
-        return MinecraftServerLauncher.launchMinecraftServer(minecraftServerConfig);
+    @Bean(destroyMethod = "destroy")
+    @ConditionalOnProperty(prefix = "mc", name = "auto-start", havingValue = "true", matchIfMissing = true)
+    public MinecraftServer minecraftServerAutoStart(MinecraftServerConfig minecraftServerConfig) throws Exception {
+        MinecraftServerImpl minecraftServer = new MinecraftServerImpl(minecraftServerConfig);
+        minecraftServer.start();
+        return minecraftServer;
+    }
+
+    @Bean(destroyMethod = "destroy")
+    @ConditionalOnProperty(prefix = "mc", name = "auto-start", havingValue = "false", matchIfMissing = true)
+    public MinecraftServer minecraftServer(MinecraftServerConfig minecraftServerConfig) throws Exception {
+        return new MinecraftServerImpl(minecraftServerConfig);
     }
 
     @Bean(destroyMethod = "destroy", initMethod = "init")
     @ConditionalOnMissingBean(MinecraftServer.class)
-    public MinecraftServerManager minecraftServerManager() {
-        return new MinecraftServerManager();
+    public MinecraftServerManagerImpl minecraftServerManager() {
+        return new MinecraftServerManagerImpl();
     }
 
     @Bean
