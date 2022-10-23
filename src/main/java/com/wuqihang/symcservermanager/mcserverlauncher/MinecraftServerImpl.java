@@ -1,31 +1,27 @@
-package com.wuqihang.symcservermanager.mc;
-
-import com.wuqihang.symcservermanager.mc.utils.MinecraftServerLauncher;
+package com.wuqihang.symcservermanager.mcserverlauncher;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author Wuqihang
  */
 public class MinecraftServerImpl implements MinecraftServer {
-    private BufferedReader in;
-    private BufferedWriter out;
-    private Process process;
+    protected BufferedReader in;
+    protected BufferedWriter out;
+    protected Process process;
 
-    private MinecraftServerMessageListener listener = null;
+    protected MinecraftServerMessageListener listener = null;
 
     protected MinecraftServerConfig config;
 
-    private Thread listenerThread;
+    protected Thread listenerThread;
 
-    private final BlockingQueue<String> msgQueue = new ArrayBlockingQueue<>(20);
+    protected final BlockingQueue<String> msgQueue = new ArrayBlockingQueue<>(40);
 
     public MinecraftServerImpl(MinecraftServerConfig config) {
         this.config = config;
@@ -47,6 +43,7 @@ public class MinecraftServerImpl implements MinecraftServer {
             return -1;
         }
         return process.toHandle().pid();
+
     }
 
     @Override
@@ -75,12 +72,12 @@ public class MinecraftServerImpl implements MinecraftServer {
         }
     }
 
-    private void launch() throws IOException {
+    protected void launch() throws IOException {
         ArrayList<String> cmd = new ArrayList<>();
         cmd.add(config.getJavaPath());
+        cmd.addAll(Arrays.asList(config.getJvmParam().split("\\s")));
         cmd.add("-jar");
         cmd.add(config.getJarPath());
-        cmd.addAll(Arrays.asList(config.getOtherParam().split("\\s")));
         ProcessBuilder processBuilder = new ProcessBuilder().command(cmd).directory(new File(config.getServerHomePath()).getAbsoluteFile());
         this.process = processBuilder.start();
         this.in = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -88,7 +85,7 @@ public class MinecraftServerImpl implements MinecraftServer {
         new Thread(() -> {
             try {
                 String s;
-                while ((s = in.readLine()) != null) {
+                while (isRunning() && (s = in.readLine()) != null) {
                     msgQueue.put(s);
                 }
             } catch (IOException | InterruptedException ignored) {

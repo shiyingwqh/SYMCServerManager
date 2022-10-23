@@ -1,10 +1,9 @@
 package com.wuqihang.symcservermanager.controller;
 
-import com.wuqihang.symcservermanager.mc.MinecraftServer;
-import com.wuqihang.symcservermanager.mc.MinecraftServerConfig;
-import com.wuqihang.symcservermanager.mc.MinecraftServerException;
-import com.wuqihang.symcservermanager.mc.utils.MinecraftServerManagerImpl;
-import com.wuqihang.symcservermanager.pojo.User;
+import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServer;
+import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerConfig;
+import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerException;
+import com.wuqihang.symcservermanager.mcserverlauncher.utils.MinecraftServerManagerImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Controller;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.servlet.http.HttpSession;
 import javax.websocket.Session;
 import java.util.List;
 import java.util.Map;
@@ -24,10 +22,10 @@ import java.util.Map;
  */
 @Controller
 @ConditionalOnMissingBean(MinecraftServer.class)
-public class McServerController {
+public class ServerController {
     private final MinecraftServerManagerImpl minecraftServerManager;
 
-    public McServerController(@Autowired(required = false) MinecraftServerManagerImpl minecraftServerManager) {
+    public ServerController(@Autowired(required = false) MinecraftServerManagerImpl minecraftServerManager) {
         this.minecraftServerManager = minecraftServerManager;
     }
 
@@ -54,15 +52,15 @@ public class McServerController {
     }
 
     @RequestMapping({"/index", "/"})
-    public String index(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return "redirect:/login";
-        }
+    public String index(Model model) {
         List<MinecraftServer> servers = minecraftServerManager.getAllServer();
         Map<MinecraftServer, MinecraftServerConfig> map = minecraftServerManager.getServerConfigMap();
         model.addAttribute("servers", servers);
         return "index";
     }
 
+    @RequestMapping("/add_instance")
+    public String addInstance() {
+        return "new_instance";
+    }
 }

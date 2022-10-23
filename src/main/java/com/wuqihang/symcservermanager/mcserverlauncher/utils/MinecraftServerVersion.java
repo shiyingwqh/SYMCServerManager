@@ -1,4 +1,4 @@
-package com.wuqihang.symcservermanager.mc.utils;
+package com.wuqihang.symcservermanager.mcserverlauncher.utils;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

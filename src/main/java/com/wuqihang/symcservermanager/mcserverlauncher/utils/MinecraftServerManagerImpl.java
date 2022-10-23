@@ -1,25 +1,16 @@
-package com.wuqihang.symcservermanager.mc.utils;
+package com.wuqihang.symcservermanager.mcserverlauncher.utils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wuqihang.symcservermanager.mc.MinecraftServer;
-import com.wuqihang.symcservermanager.mc.MinecraftServerConfig;
-import com.wuqihang.symcservermanager.mc.MinecraftServerException;
-import com.wuqihang.symcservermanager.mc.MinecraftServerImpl;
-import org.springframework.web.client.HttpClientErrorException;
+import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServer;
+import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerConfig;
+import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerException;
+import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerImpl;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Wuqihang
@@ -31,6 +22,9 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
     private final Map<MinecraftServer, MinecraftServerConfig> serverConfigMap = new Hashtable<>();
     private final AtomicInteger ids = new AtomicInteger(0);
     private final static ObjectMapper mapper = new ObjectMapper();
+
+    protected MinecraftServerManagerImpl() {
+    }
 
     public void init() {
         try {
@@ -49,22 +43,20 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
                     boolean mkdirs = server.mkdirs();
                 }
                 if (server.isDirectory()) {
-                    MinecraftServerConfig.MinecraftServerConfigBuilder builder = MinecraftServerConfig.builder();
+                    MinecraftServerConfig config = new MinecraftServerConfig();
                     for (File listFile : Objects.requireNonNull(server.listFiles())) {
                         if (listFile.isDirectory()) {
                             File serverJar = new File(listFile, "server.jar");
                             if (!serverJar.exists()) {
                                 continue;
                             }
-
-                            builder.javaPath(System.getProperty("java.home") + File.separator + "bin" + File.separator + "java")
-                                    .jarPath(new File(listFile, "server.jar").getAbsolutePath())
-                                    .serverHomePath(listFile.getAbsolutePath())
-                                    .name(listFile.getName())
-                                    .otherParam("")
-                                    .comment("")
-                                    .id(ids.get());
-                            MinecraftServerConfig config = builder.build();
+                            config.setJavaPath(System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
+                            config.setJavaPath(new File(listFile, "server.jar").getAbsolutePath());
+                            config.setServerHomePath(listFile.getAbsolutePath());
+                            config.setName(listFile.getName());
+                            config.setJvmParam("");
+                            config.setComment("");
+                            config.setId(ids.get());
                             configs.put(config.getId(), config);
                         }
                     }
@@ -141,6 +133,12 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
     @Override
     public MinecraftServerConfig getConfig(MinecraftServer server) {
         return serverConfigMap.get(server);
+    }
+
+    @Override
+    public void putConfig(MinecraftServerConfig config) {
+        config.setId(ids.get());
+        configs.put(config.getId(), config);
     }
 
     @Override

@@ -6,14 +6,16 @@
 <div th:replace="common::bg"></div>
 <div th:replace="common::navbar(cur=0)"></div>
 <div style="padding-left: 280px">
-    <div class="container">
-        <ul th:each="server:${servers}" class="bg-light list-group">
-            <li class="list-group-item">
-                <div th:text="${server.getName()}"></div>
-                <div th:text="${server.pid()}"></div>
-            </li>
-        </ul>
+  <div class="container">
+    <ul class="bg-light list-group">
+      <li class="list-group-item">
+        <div th:text="${server.getName()}"></div>
+        <div th:text="${server.pid()}"></div>
+      </li>
+    </ul>
+    <div th:replace="common::serverTermianl(server=${server},config=${config})">
     </div>
+  </div>
 </div>
 
 

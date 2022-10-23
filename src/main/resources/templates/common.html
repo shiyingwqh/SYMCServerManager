@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
+<head th:fragment="head">
     <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
     <title>Title</title>
 </head>
 <body>
@@ -14,20 +16,29 @@
     </div>
 </div>
 <div th:fragment="bg" style="background-image: url('https://www.minecraft.net/content/dam/games/minecraft/background-images/pdp-hero-bg.png');height: 100vh;width: 100vw;position: fixed;z-index: -1;"></div>
-<div th:fragment="navbar" class="position-fixed  d-flex flex-column flex-shrink-0 p-3 text-white bg-dark vh-100"
+<div th:fragment="navbar" class="position-fixed d-flex flex-column flex-shrink-0 p-3 text-white bg-dark vh-100"
      style="width: 280px;">
     <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
         <span class="fs-4">Sidebar</span>
     </a>
     <hr>
     <ul class="nav nav-pills flex-column mb-auto">
-        <li>
-            <a href="/index" class="nav-link text-white">
+        <li class="nav-item">
+            <a href="/index" th:class="${cur} == 0 ? 'nav-link active text-white': 'nav-link text-white' ">
                 <i class="bi bi-speedometer2"></i>
                 Dashboard
             </a>
         </li>
+        <li class="nav-item">
+            <a href="/add_instance" th:class="${cur} == 1 ? 'nav-link active text-white': 'nav-link text-white'">
+                <i class="bi bi-speedometer2"></i>
+                Add Instance
+            </a>
+        </li>
     </ul>
+</div>
+<div th:fragment="foot">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </div>
 </body>
 </html>

@@ -1,4 +1,4 @@
-package com.wuqihang.symcservermanager.mc;
+package com.wuqihang.symcservermanager.mcserverlauncher;
 
 import java.io.IOException;
 

@@ -1,11 +1,8 @@
-package com.wuqihang.symcservermanager.mc;
+package com.wuqihang.symcservermanager.mcserverlauncher;
 
 /**
  * @author Wuqihang
  */
 public interface MinecraftServerMessageListener {
     void message(String msg);
-    default boolean isClosed() {
-        return false;
-    }
 }

@@ -1,8 +1,8 @@
-package com.wuqihang.symcservermanager.mc.utils;
+package com.wuqihang.symcservermanager.mcserverlauncher.utils;
 
-import com.wuqihang.symcservermanager.mc.MinecraftServer;
-import com.wuqihang.symcservermanager.mc.MinecraftServerConfig;
-import com.wuqihang.symcservermanager.mc.MinecraftServerException;
+import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServer;
+import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerConfig;
+import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerException;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,6 +22,8 @@ public interface MinecraftServerManager {
     List<MinecraftServer> getAllServer();
     MinecraftServerConfig getConfig(int configId);
     MinecraftServerConfig getConfig(MinecraftServer server);
+
+    void putConfig(MinecraftServerConfig config);
 
     void removeConfig(int configId) throws MinecraftServerException;
     List<MinecraftServerConfig> getAllConfigs();
