@@ -79,7 +79,7 @@ public class MCConfigurer {
         return (MinecraftServerManagerImpl) launcher.getManager();
     }
 
-    @Bean
+    @Bean(initMethod = "init")
     @ConditionalOnBean(MinecraftServerLauncher.class)
     public MinecraftServerDownloader minecraftServerDownloader(@Autowired MinecraftServerLauncher launcher) throws IOException{
         return launcher.getDownloader();

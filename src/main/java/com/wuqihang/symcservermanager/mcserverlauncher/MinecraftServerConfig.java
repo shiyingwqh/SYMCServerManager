@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.thymeleaf.util.StringUtils;
 
 import java.io.File;
+import java.util.Objects;
 
 /**
  * @author Wuqihang
@@ -110,5 +111,18 @@ public class MinecraftServerConfig {
 
     public void setServerHomePath(String serverHomePath) {
         this.serverHomePath = serverHomePath;
+    }
+
+    @Override
+    public String toString() {
+        return "MinecraftServerConfig{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", javaPath='" + javaPath + '\'' +
+                ", jarPath='" + jarPath + '\'' +
+                ", jvmParam='" + jvmParam + '\'' +
+                ", comment='" + comment + '\'' +
+                ", serverHomePath='" + serverHomePath + '\'' +
+                '}';
     }
 }

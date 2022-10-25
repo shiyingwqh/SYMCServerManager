@@ -2,10 +2,7 @@ package com.wuqihang.symcservermanager.mcserverlauncher.utils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServer;
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerConfig;
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerException;
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerImpl;
+import com.wuqihang.symcservermanager.mcserverlauncher.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,18 +73,11 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
 
     @Override
     public MinecraftServer launch(int configId) throws MinecraftServerException {
-        MinecraftServerConfig config = configs.get(configId);
-        if (config == null) {
-            throw new MinecraftServerException("Config Not Found");
-        }
-        if (servers.containsKey(configId)) {
-            throw new MinecraftServerException("Server Instance Exist");
-        }
-        MinecraftServerImpl minecraftServer = new MinecraftServerImpl(config);
+        MinecraftServer minecraftServer = create(configId);
         try {
             minecraftServer.start();
             servers.put(configId, minecraftServer);
-            serverConfigMap.put(minecraftServer, config);
+            serverConfigMap.put(minecraftServer, configs.get(configId));
         } catch (IOException e) {
             configs.remove(configId);
             throw new MinecraftServerException("Server Launch Failed");
@@ -110,7 +100,13 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
         if (servers.containsKey(configId)) {
             throw new MinecraftServerException("Server Instance Exist");
         }
-        MinecraftServerImpl minecraftServer = new MinecraftServerImpl(config);
+        MinecraftServer minecraftServer;
+        if (config instanceof ForgeMinecraftServerConfig) {
+            minecraftServer = new ForgeMinecraftServer((ForgeMinecraftServerConfig) config);
+        } else {
+            minecraftServer = new MinecraftServerImpl(config);
+        }
+        servers.put(config.getId(), minecraftServer);
         serverConfigMap.put(minecraftServer, config);
         return minecraftServer;
     }

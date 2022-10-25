@@ -30,4 +30,12 @@ public class ForgeMinecraftServerConfig extends MinecraftServerConfig {
     public void setNewly(boolean newly) {
         this.newly = newly;
     }
+
+    @Override
+    public String toString() {
+        return "ForgeMinecraftServerConfig{" +
+                "forgeArgs='" + forgeArgs + '\'' +
+                ", newly=" + newly +
+                "} " + super.toString();
+    }
 }

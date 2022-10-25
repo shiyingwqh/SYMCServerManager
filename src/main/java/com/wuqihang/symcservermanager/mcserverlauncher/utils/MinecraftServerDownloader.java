@@ -10,12 +10,16 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -27,7 +31,10 @@ public class MinecraftServerDownloader {
     private final Logger logger = LoggerFactory.getLogger(MinecraftServerDownloader.class);
     private final JsonMapper mapper = new JsonMapper();
 
-    protected MinecraftServerDownloader() throws IOException {
+    protected MinecraftServerDownloader() {
+    }
+
+    public void init() throws IOException {
         URL url = new URL("http://launchermeta.mojang.com/mc/game/version_manifest.json");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
@@ -65,7 +72,7 @@ public class MinecraftServerDownloader {
                 .map(MinecraftServerVersion::getUrl).findFirst().orElse(null);
     }
 
-    public Future<Boolean> download(String id, String path) {
+    public Future<Boolean> download(String id, String path, BiFunction<Long, Long, Void> callback) {
         FutureTask<Boolean> task = new FutureTask<>(() -> {
             URL url = new URL(getUrl(id));
             HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
@@ -83,29 +90,37 @@ public class MinecraftServerDownloader {
             URL serverUrl = new URL(serverUrlStr);
             connection = (HttpsURLConnection) serverUrl.openConnection();
             connection.connect();
+            logger.info("Download From: " + serverUrlStr);
+            long size = connection.getContentLengthLong();
+            long cur = 0;
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 connection.disconnect();
-                logger.info(id + "Server Jar Failed");
+                logger.info(id + " Server Jar Failed");
                 return false;
             }
-            File file = new File(path, "server_pack.jar");
+            File file = new File(path, "server.jar");
             boolean newFile = file.createNewFile();
             try {
                 if (!newFile) {
                     return false;
                 }
                 inputStream = connection.getInputStream();
+                System.out.println(connection.getResponseMessage());
                 try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
-                    byte[] buffer = new byte[4096];
+                    byte[] buffer = new byte[8192];
                     int len;
                     while ((len = inputStream.read(buffer)) > 0) {
                         fileOutputStream.write(buffer, 0, len);
+                        cur += len;
+                        if (callback != null) {
+                            callback.apply(cur, size);
+                        }
                     }
                 }
-                logger.info(id + "Server Jar Downloaded");
+                logger.info(id + " Server Jar Downloaded");
             } catch (Exception e) {
                 file.delete();
-                logger.info(id + "Server Jar Failed");
+                logger.info(id + " Server Jar Download Failed");
                 return false;
             }
             connection.disconnect();
@@ -114,46 +129,6 @@ public class MinecraftServerDownloader {
         });
         task.run();
         return task;
-    }
-
-    public void unpackServer(String serverJar) throws IOException {
-        File file = new File(serverJar);
-        try (JarFile jarFile = new JarFile(file)) {
-            Enumeration<JarEntry> entries = jarFile.entries();
-            while (entries.hasMoreElements()) {
-                JarEntry jarEntry = entries.nextElement();
-                String name = jarEntry.getName();
-                if (name.matches("META-INF/versions/.*/.*\\.jar")) {
-                    File server = new File(file.getParentFile(), jarEntry.getName().substring(jarEntry.getName().lastIndexOf("/")));
-                    boolean newFile = server.createNewFile();
-                    if (!newFile) {
-                        return;
-                    }
-                    writeFile(jarFile, jarEntry, server);
-                }
-                if (name.matches("META-INF/libraries/.*")) {
-                    if (!jarEntry.isDirectory()) {
-                        File lib = new File(file.getParentFile(), jarEntry.getName().substring(jarEntry.getName().indexOf("/")));
-                        boolean mkdirs = lib.getParentFile().mkdirs();
-                        boolean newFile = lib.createNewFile();
-                        writeFile(jarFile, jarEntry, lib);
-                    }
-                }
-            }
-        }
-    }
-
-    private void writeFile(JarFile jarFile, JarEntry jarEntry, File lib) throws IOException {
-        InputStream inputStream = jarFile.getInputStream(jarEntry);
-
-        try (FileOutputStream fileOutputStream = new FileOutputStream(lib)) {
-            byte[] buffer = new byte[4096];
-            int len;
-            while ((len = inputStream.read(buffer)) > 0) {
-                fileOutputStream.write(buffer, 0, len);
-            }
-        }
-
     }
 
     public void installForge(String javaPath, String serverPath, String forgeInstallerJar) throws IOException {

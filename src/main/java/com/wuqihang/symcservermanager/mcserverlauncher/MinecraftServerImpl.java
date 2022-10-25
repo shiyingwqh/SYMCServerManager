@@ -75,7 +75,9 @@ public class MinecraftServerImpl implements MinecraftServer {
     protected void launch() throws IOException {
         ArrayList<String> cmd = new ArrayList<>();
         cmd.add(config.getJavaPath());
-        cmd.addAll(Arrays.asList(config.getJvmParam().split("\\s")));
+        if (!config.getJvmParam().isBlank()){
+            cmd.addAll(Arrays.asList(config.getJvmParam().split("\\s+")));
+        }
         cmd.add("-jar");
         cmd.add(config.getJarPath());
         ProcessBuilder processBuilder = new ProcessBuilder().command(cmd).directory(new File(config.getServerHomePath()).getAbsoluteFile());
@@ -83,14 +85,12 @@ public class MinecraftServerImpl implements MinecraftServer {
         this.in = new BufferedReader(new InputStreamReader(process.getInputStream()));
         this.out = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
         new Thread(() -> {
-            try {
-                String s;
-                while (isRunning() && (s = in.readLine()) != null) {
-                    msgQueue.put(s);
+            in.lines().forEach(e -> {
+                try {
+                    msgQueue.put(e);
+                } catch (InterruptedException ignored) {
                 }
-            } catch (IOException | InterruptedException ignored) {
-
-            }
+            });
         }).start();
     }
 

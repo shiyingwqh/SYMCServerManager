@@ -17,13 +17,13 @@ public class ForgeMinecraftServer extends MinecraftServerImpl {
     protected void launch() throws IOException {
         ForgeMinecraftServerConfig forgeConfig = (ForgeMinecraftServerConfig) config;
         ArrayList<String> cmd = new ArrayList<>();
+        cmd.add(config.getJavaPath());
+        if (!config.getJvmParam().isBlank()){
+            cmd.addAll(Arrays.asList(config.getJvmParam().split("\\s+")));
+        }
         if (forgeConfig.isNewly()) {
-            cmd.add(config.getJavaPath());
-            cmd.addAll(Arrays.asList(config.getJvmParam().split("\\s")));
-            cmd.addAll(Arrays.asList(forgeConfig.getForgeArgs().split("\\s")));
-        }else  {
-            cmd.add(config.getJavaPath());
-            cmd.addAll(Arrays.asList(config.getJvmParam().split("\\s")));
+            cmd.addAll(Arrays.asList(forgeConfig.getForgeArgs().split("\\s+")));
+        } else {
             cmd.add("-jar");
             cmd.add(config.getJarPath());
         }
@@ -33,15 +33,11 @@ public class ForgeMinecraftServer extends MinecraftServerImpl {
         this.process = processBuilder.start();
         this.out = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
         this.in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        new Thread(() -> {
+        new Thread(() -> in.lines().forEach(s -> {
             try {
-                String s;
-                while (isRunning() && (s = in.readLine()) != null) {
-                    msgQueue.put(s);
-                }
-            } catch (IOException | InterruptedException ignored) {
-
+                msgQueue.put(s);
+            } catch (InterruptedException ignored) {
             }
-        }).start();
+        })).start();
     }
 }
