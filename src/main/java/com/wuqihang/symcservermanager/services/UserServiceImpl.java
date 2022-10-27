@@ -9,10 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -34,12 +31,12 @@ public class UserServiceImpl implements UserService {
             List<User> users = mapper.readValue(file, new TypeReference<List<User>>() {
             });
             for (User user : users) {
-                int id = ids.get();
+                int id = ids.getAndIncrement();
                 user.setId(id);
                 map.put(id, user);
             }
         } catch (IOException e) {
-            int id = ids.get();
+            int id = ids.getAndIncrement();
             map.put(id, new User(id, true, true,"admin", "admin"));
         }
 
@@ -52,18 +49,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUser(String username) {
-        for (int key : map.keySet()) {
-            User user = map.get(key);
-            if (user.getUsername().equals(username)) {
-                return user;
-            }
-        }
-        return null;
+        return map.values().stream().filter(user -> Objects.equals(username, user.getUsername())).findFirst().orElse(null);
     }
 
     @Override
     public List<User> getAllUser() {
-        return new ArrayList<>(map.values());
+        return map.values().stream().toList();
     }
 
     @Override
@@ -72,7 +63,7 @@ public class UserServiceImpl implements UserService {
             map.put(user.getId(), user);
         } else {
             int i;
-            while (map.containsKey(i = ids.get())) ;
+            while (map.containsKey(i = ids.getAndIncrement())) ;
             user.setId(i);
             map.put(i, user);
         }

@@ -34,19 +34,19 @@
     </select>
     <div class="form-control mb-3">
         <label class="form-check-label">
-            <input class="form-check-input" type="checkbox" id="install-forge" name="forge" onclick="updateForgeList()">
+            <input class="form-check-input" type="checkbox" id="install-forge" name="install_forge" onclick="updateForgeList()">
             Install Forge
         </label>
     </div>
-    <select class="form-select mb-3 visually-hidden" name="forge" id="forge" aria-label="Server Versions">
+    <select class="form-select mb-3 visually-hidden" name="forge_version" id="forge" aria-label="Server Versions">
         <option selected disabled value="">Select Forge Version</option>
     </select>
     <button type="submit" class="btn btn-primary">Submit</button>
     <script>
         function updateForgeList() {
+            var $forge = $("#forge");
             if ($("#install-forge")[0].checked) {
                 var v = $("#version").val();
-                var $forge = $("#forge");
                 $forge.empty()
                 var option = new Option("Select Forge Version", "", true, true);
                 option.disabled = true
@@ -55,14 +55,16 @@
                     alert("Please Select Version")
                     e.checked = false
                 } else {
+                    $forge.attr('class','form-select mb-3')
                     $.getJSON("/forge/" + v, function (json) {
-                        $forge.attr('class','form-select mb-3')
                         json.forEach((o) => {
                             console.log(o.version)
                             $forge.append(new Option(o.version, o.version))
                         })
                     })
                 }
+            }else {
+                $forge.attr('class','form-select mb-3 visually-hidden')
             }
         }
     </script>

@@ -1,12 +1,12 @@
 package com.wuqihang.symcservermanager.controller;
 
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServer;
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerMessageListener;
-import com.wuqihang.symcservermanager.mcserverlauncher.utils.MinecraftServerManagerImpl;
+import com.wuqihang.mcserverlauncher.server.MinecraftServer;
+import com.wuqihang.mcserverlauncher.server.MinecraftServerMessageListener;
+import com.wuqihang.mcserverlauncher.utils.MinecraftServerManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.util.StringUtils;
 
@@ -21,7 +21,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  */
 @Component
 @ServerEndpoint(value = "/socket/{id}")
-@ConditionalOnBean(MinecraftServer.class)
+@ConditionalOnMissingBean(MinecraftServer.class)
 public class WebSocketServer {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketServer.class);
     private Session session;
@@ -46,8 +46,7 @@ public class WebSocketServer {
     public void onOpen(Session session, @PathParam("id") String id) {
         this.session = session;
         set.add(this);
-        int _id = Integer.parseInt(id);
-        this.minecraftServer = minecraftServerManager.getServer(_id);
+        this.minecraftServer = minecraftServerManager.getServer(id);
         if (this.minecraftServer == null) {
             return;
         }
@@ -73,7 +72,7 @@ public class WebSocketServer {
     public synchronized void sendMessage(String msg) {
         try {
             this.session.getBasicRemote().sendText(msg + "\n");
-            logger.info(msg);
+//            logger.info(msg);
         } catch (IOException e) {
             logger.warn("Session " + session.getId() + " Send Message Failed ",e);
         }

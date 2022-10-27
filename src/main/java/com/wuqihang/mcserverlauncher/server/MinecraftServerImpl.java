@@ -1,4 +1,6 @@
-package com.wuqihang.symcservermanager.mcserverlauncher;
+package com.wuqihang.mcserverlauncher.server;
+
+import com.wuqihang.mcserverlauncher.config.MinecraftServerConfig;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -80,18 +82,17 @@ public class MinecraftServerImpl implements MinecraftServer {
         }
         cmd.add("-jar");
         cmd.add(config.getJarPath());
+        cmd.add("nogui");
         ProcessBuilder processBuilder = new ProcessBuilder().command(cmd).directory(new File(config.getServerHomePath()).getAbsoluteFile());
         this.process = processBuilder.start();
         this.in = new BufferedReader(new InputStreamReader(process.getInputStream()));
         this.out = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-        new Thread(() -> {
-            in.lines().forEach(e -> {
-                try {
-                    msgQueue.put(e);
-                } catch (InterruptedException ignored) {
-                }
-            });
-        }).start();
+        new Thread(() -> in.lines().forEach(e -> {
+            try {
+                msgQueue.put(e);
+            } catch (InterruptedException ignored) {
+            }
+        })).start();
     }
 
     private void setProcess(Process process) {

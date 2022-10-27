@@ -1,12 +1,14 @@
 package com.wuqihang.symcservermanager.config;
 
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServer;
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerConfig;
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerException;
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerImpl;
-import com.wuqihang.symcservermanager.mcserverlauncher.utils.MinecraftServerDownloader;
-import com.wuqihang.symcservermanager.mcserverlauncher.utils.MinecraftServerLauncher;
-import com.wuqihang.symcservermanager.mcserverlauncher.utils.MinecraftServerManagerImpl;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wuqihang.mcserverlauncher.server.MinecraftServer;
+import com.wuqihang.mcserverlauncher.config.MinecraftServerConfig;
+import com.wuqihang.mcserverlauncher.server.MinecraftServerException;
+import com.wuqihang.mcserverlauncher.server.MinecraftServerImpl;
+import com.wuqihang.mcserverlauncher.utils.MinecraftServerDownloader;
+import com.wuqihang.mcserverlauncher.MinecraftServerLauncher;
+import com.wuqihang.mcserverlauncher.utils.MinecraftServerManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Enumeration;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * @author Wuqihang
@@ -35,18 +40,29 @@ public class MCConfigurer {
 
     @Bean
     @ConditionalOnProperty(prefix = "mc", name = "single-mode", havingValue = "true")
-    public MinecraftServerConfig minecraftServerConfig(@Value("${mc.jar-path}") String jarPath) throws MinecraftServerException {
+    public MinecraftServerConfig minecraftServerConfig(@Value("${mc.jar-path}") String jarPath) throws MinecraftServerException, IOException {
         MinecraftServerConfig config = new MinecraftServerConfig();
         File jar = new File(jarPath);
         if (!jar.exists() || jar.isDirectory()) {
             throw new MinecraftServerException("Server Jar Not Found");
         }
-        config.setId(0);
         config.setName("default");
         config.setJarPath(jar.getAbsolutePath());
         config.setJavaPath(System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
         config.setComment("default");
         config.setJvmParam("");
+        JarFile jarFile = new JarFile(jar);
+        Enumeration<JarEntry> entries = jarFile.entries();
+        while (entries.hasMoreElements()) {
+            JarEntry entry = entries.nextElement();
+            if (entry.getName().matches("version.json")) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode node = objectMapper.readTree(jarFile.getInputStream(entry));
+                String id = node.get("id").asText();
+                config.setVersion(id);
+                break;
+            }
+        }
         config.setServerHomePath(jar.getParentFile().getAbsolutePath());
         return config;
     }

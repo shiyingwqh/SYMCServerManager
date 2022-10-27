@@ -1,8 +1,6 @@
-package com.wuqihang.symcservermanager.mcserverlauncher.utils;
+package com.wuqihang.mcserverlauncher.utils;
 
-import com.wuqihang.symcservermanager.mcserverlauncher.ForgeMinecraftServerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.wuqihang.mcserverlauncher.config.ForgeMinecraftServerConfig;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -14,35 +12,20 @@ import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ForgeServerInstaller {
-    private static final String OS_TYPE;
-    private static final String BASH_EX;
+public class ForgeServerInstaller extends AbstractModServerInstaller{
 
-    private static final Logger logger = LoggerFactory.getLogger(ForgeServerInstaller.class);
-
-    static {
-        String osName = System.getProperty("os.name");
-        if (osName.indexOf("Windows") > 0) {
-            OS_TYPE = "WINDOWS";
-            BASH_EX = "bat";
-        } else {
-            OS_TYPE = "UNIX";
-            BASH_EX = "sh";
-        }
+    public static Future<ForgeMinecraftServerConfig> install(String forgeInstallerJar) throws IOException {
+        return install(forgeInstallerJar, new ForgeMinecraftServerConfig());
     }
 
-    public static Future<ForgeMinecraftServerConfig> install(String serverPath, String forgeInstallerJar) throws IOException {
-        return install(serverPath, forgeInstallerJar, new ForgeMinecraftServerConfig());
-    }
-
-    public static Future<ForgeMinecraftServerConfig> install(String serverPath, String forgeInstallerJar, ForgeMinecraftServerConfig config) throws IOException {
-        File server = new File(serverPath);
+    public static Future<ForgeMinecraftServerConfig> install(String forgeInstallerJar, ForgeMinecraftServerConfig config) throws IOException {
+        File server = new File(config.getServerHomePath());
         File serverJar = check(server);
         config.setJarPath(serverJar.getAbsolutePath());
         File forge = new File(forgeInstallerJar);
         ProcessBuilder processBuilder = new ProcessBuilder();
         ArrayList<String> cmd = new ArrayList<>();
-        cmd.add("java");
+        cmd.add(config.getJavaPath());
         cmd.add("-jar");
         cmd.add(forge.getAbsolutePath());
         cmd.add("--installServer");
@@ -78,7 +61,7 @@ public class ForgeServerInstaller {
             }
             return config;
         });
-        new Thread(task).start();
+        executorService.submit(task);
         return task;
     }
 

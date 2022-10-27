@@ -1,7 +1,7 @@
 package com.wuqihang.symcservermanager.controller;
 
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServer;
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerConfig;
+import com.wuqihang.mcserverlauncher.server.MinecraftServer;
+import com.wuqihang.mcserverlauncher.config.MinecraftServerConfig;
 import com.wuqihang.symcservermanager.pojo.User;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Controller;

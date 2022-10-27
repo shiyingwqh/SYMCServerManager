@@ -1,38 +1,55 @@
-package com.wuqihang.symcservermanager.mcserverlauncher.utils;
+package com.wuqihang.mcserverlauncher.utils;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wuqihang.symcservermanager.mcserverlauncher.*;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.wuqihang.mcserverlauncher.server.MinecraftServer;
+import com.wuqihang.mcserverlauncher.config.ForgeMinecraftServerConfig;
+import com.wuqihang.mcserverlauncher.config.MinecraftServerConfig;
+import com.wuqihang.mcserverlauncher.server.ForgeMinecraftServer;
+import com.wuqihang.mcserverlauncher.server.MinecraftServerException;
+import com.wuqihang.mcserverlauncher.server.MinecraftServerImpl;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Wuqihang
  */
 public class MinecraftServerManagerImpl implements MinecraftServerManager {
-    private final Map<Integer, MinecraftServer> servers = new Hashtable<>();
+    private final Map<String, MinecraftServer> servers = new Hashtable<>();
 
-    private final Map<Integer, MinecraftServerConfig> configs = new Hashtable<>();
+    private final Map<String, MinecraftServerConfig> configs = new Hashtable<>();
     private final Map<MinecraftServer, MinecraftServerConfig> serverConfigMap = new Hashtable<>();
-    private final AtomicInteger ids = new AtomicInteger(0);
     private final static ObjectMapper mapper = new ObjectMapper();
 
-    protected MinecraftServerManagerImpl() {
+    private MinecraftServerManagerImpl() {
     }
 
     public void init() {
         try {
             File file = new File("configs.json");
             if (file.exists()) {
-                Set<MinecraftServerConfig> minecraftServerConfigs = mapper.readValue(file, new TypeReference<Set<MinecraftServerConfig>>() {
-                });
-                for (MinecraftServerConfig c : minecraftServerConfigs) {
-                    int id = ids.get();
-                    c.setId(id);
-                    configs.put(id, c);
+                JsonNode minecraftServerConfigs = mapper.readTree(file);
+                for (JsonNode node : minecraftServerConfigs) {
+                    MinecraftServerConfig config;
+                    if (node.has("forgeVersion")) {
+                        config = new ForgeMinecraftServerConfig();
+                        ((ForgeMinecraftServerConfig) config).setForgeArgs(node.get("forgeArgs").asText());
+                        ((ForgeMinecraftServerConfig) config).setNewly(node.get("newly").asBoolean(false));
+                        ((ForgeMinecraftServerConfig) config).setForgeVersion(node.get("forgeVersion").asText());
+                    }else {
+                        config = new MinecraftServerConfig();
+                    }
+                    config.setName(node.get("name").asText());
+                    config.setJarPath(node.get("jarPath").asText());
+                    config.setJavaPath(node.get("javaPath").asText());
+                    config.setComment(node.get("comment").asText());
+                    config.setServerHomePath(node.get("serverHomePath").asText());
+                    config.setJvmParam(node.get("jvmParam").asText());
+                    config.setVersion(node.get("version").asText());
+                    configs.put(config.getName(), config);
                 }
             } else {
                 File server = new File("servers");
@@ -53,8 +70,7 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
                             config.setName(listFile.getName());
                             config.setJvmParam("");
                             config.setComment("");
-                            config.setId(ids.get());
-                            configs.put(config.getId(), config);
+                            configs.put(config.getName(), config);
                         }
                     }
                 }
@@ -66,20 +82,19 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
 
     @Override
     public MinecraftServer launch(MinecraftServerConfig config) throws MinecraftServerException {
-        config.setId(ids.get());
-        configs.put(config.getId(), config);
-        return launch(config.getId());
+        configs.put(config.getName(), config);
+        return launch(config.getName());
     }
 
     @Override
-    public MinecraftServer launch(int configId) throws MinecraftServerException {
-        MinecraftServer minecraftServer = create(configId);
+    public MinecraftServer launch(String configName) throws MinecraftServerException {
+        MinecraftServer minecraftServer = create(configName);
         try {
             minecraftServer.start();
-            servers.put(configId, minecraftServer);
-            serverConfigMap.put(minecraftServer, configs.get(configId));
+            servers.put(configName, minecraftServer);
+            serverConfigMap.put(minecraftServer, configs.get(configName));
         } catch (IOException e) {
-            configs.remove(configId);
+            configs.remove(configName);
             throw new MinecraftServerException("Server Launch Failed");
         }
         return minecraftServer;
@@ -87,18 +102,17 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
 
     @Override
     public MinecraftServer create(MinecraftServerConfig config) throws MinecraftServerException {
-        config.setId(ids.get());
-        return create(config.getId());
+        return create(config.getName());
     }
 
     @Override
-    public MinecraftServer create(int configId) throws MinecraftServerException {
-        MinecraftServerConfig config = configs.get(configId);
+    public MinecraftServer create(String configName) throws MinecraftServerException {
+        MinecraftServerConfig config = configs.get(configName);
         if (config == null) {
             throw new MinecraftServerException("Config Not Found");
         }
-        if (servers.containsKey(configId)) {
-            throw new MinecraftServerException("Server Instance Exist");
+        if (servers.containsKey(configName)) {
+            return servers.get(configName);
         }
         MinecraftServer minecraftServer;
         if (config instanceof ForgeMinecraftServerConfig) {
@@ -106,24 +120,24 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
         } else {
             minecraftServer = new MinecraftServerImpl(config);
         }
-        servers.put(config.getId(), minecraftServer);
+        servers.put(config.getName(), minecraftServer);
         serverConfigMap.put(minecraftServer, config);
         return minecraftServer;
     }
 
     @Override
-    public MinecraftServer getServer(int configId) {
-        return servers.get(configId);
+    public MinecraftServer getServer(String configName) {
+        return servers.get(configName);
     }
 
     @Override
-    public List<MinecraftServer> getAllServer() {
-        return servers.values().stream().toList();
+    public Set<MinecraftServer> getAllServer() {
+        return new HashSet<>(servers.values());
     }
 
     @Override
-    public MinecraftServerConfig getConfig(int configId) {
-        return configs.get(configId);
+    public MinecraftServerConfig getConfig(String configName) {
+        return configs.get(configName);
     }
 
     @Override
@@ -133,18 +147,17 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
 
     @Override
     public void putConfig(MinecraftServerConfig config) {
-        config.setId(ids.get());
-        configs.put(config.getId(), config);
+        configs.put(config.getName(), config);
     }
 
     @Override
-    public void removeConfig(int configId) throws MinecraftServerException {
-        if (servers.containsKey(configId) && servers.get(configId).isRunning()) {
+    public void removeConfig(String configName) throws MinecraftServerException {
+        if (servers.containsKey(configName) && servers.get(configName).isRunning()) {
             throw new MinecraftServerException("Can't Remove Config, Server Instance Still Running");
         }
-        servers.remove(configId);
-        serverConfigMap.remove(servers.getOrDefault(configId, null));
-        configs.remove(configId);
+        servers.remove(configName);
+        serverConfigMap.remove(servers.getOrDefault(configName, null));
+        configs.remove(configName);
     }
 
     @Override
@@ -158,24 +171,24 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
     }
 
     @Override
-    public void startServer(int id) throws IOException {
-        MinecraftServer minecraftServer = servers.get(id);
+    public void startServer(String configName) throws IOException {
+        MinecraftServer minecraftServer = servers.get(configName);
         if (minecraftServer != null) {
             minecraftServer.start();
         }
     }
 
     @Override
-    public void stopServer(int id) {
-        MinecraftServer minecraftServer = servers.get(id);
+    public void stopServer(String configName) {
+        MinecraftServer minecraftServer = servers.get(configName);
         if (minecraftServer != null) {
             minecraftServer.stop();
         }
     }
 
     @Override
-    public void restartServer(int id) {
-        MinecraftServer minecraftServer = servers.get(id);
+    public void restartServer(String configName) {
+        MinecraftServer minecraftServer = servers.get(configName);
         if (minecraftServer != null) {
             minecraftServer.restart();
         }

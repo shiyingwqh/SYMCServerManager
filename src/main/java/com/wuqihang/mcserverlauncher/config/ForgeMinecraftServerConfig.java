@@ -1,4 +1,4 @@
-package com.wuqihang.symcservermanager.mcserverlauncher;
+package com.wuqihang.mcserverlauncher.config;
 
 /**
  * @author Wuqihang
@@ -6,13 +6,16 @@ package com.wuqihang.symcservermanager.mcserverlauncher;
 public class ForgeMinecraftServerConfig extends MinecraftServerConfig {
     private String forgeArgs;
     private boolean newly;
+    private String forgeVersion;
 
     public ForgeMinecraftServerConfig() {
     }
 
-    public ForgeMinecraftServerConfig(int id, String name, String javaPath, String jarPath, String otherParam, String comment, String serverHomePath, String forgeArgs) {
-        super(id, name, javaPath, jarPath, otherParam, comment, serverHomePath);
+    public ForgeMinecraftServerConfig(String name, String javaPath, String jarPath, String jvmParam, String comment, String serverHomePath, String version, String forgeArgs, boolean newly, String forgeVersion) {
+        super(name, javaPath, jarPath, jvmParam, comment, serverHomePath, version);
         this.forgeArgs = forgeArgs;
+        this.newly = newly;
+        this.forgeVersion = forgeVersion;
     }
 
     public String getForgeArgs() {
@@ -29,6 +32,14 @@ public class ForgeMinecraftServerConfig extends MinecraftServerConfig {
 
     public void setNewly(boolean newly) {
         this.newly = newly;
+    }
+
+    public String getForgeVersion() {
+        return forgeVersion;
+    }
+
+    public void setForgeVersion(String forgeVersion) {
+        this.forgeVersion = forgeVersion;
     }
 
     @Override

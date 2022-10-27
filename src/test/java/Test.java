@@ -1,15 +1,8 @@
-import com.wuqihang.symcservermanager.mcserverlauncher.ForgeMinecraftServer;
-import com.wuqihang.symcservermanager.mcserverlauncher.ForgeMinecraftServerConfig;
-import com.wuqihang.symcservermanager.mcserverlauncher.utils.ForgeServerInstaller;
-import com.wuqihang.symcservermanager.mcserverlauncher.utils.MinecraftServerDownloader;
-import com.wuqihang.symcservermanager.mcserverlauncher.utils.MinecraftServerLauncher;
-import com.wuqihang.symcservermanager.mcserverlauncher.utils.MinecraftServerManager;
-import org.slf4j.LoggerFactory;
+import com.wuqihang.mcserverlauncher.MinecraftServerLauncher;
+import com.wuqihang.mcserverlauncher.utils.MinecraftServerDownloader;
+import com.wuqihang.mcserverlauncher.utils.MinecraftServerManager;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
-import java.util.function.BiFunction;
+import java.io.File;
 
 /**
  * @author Wuqihang
@@ -17,14 +10,11 @@ import java.util.function.BiFunction;
 public class Test {
 
     public static void main(String[] args) throws Exception {
-        MinecraftServerDownloader downloader = MinecraftServerLauncher.getInstance().getDownloader();
-        downloader.init();
-        downloader.download("1.19.2", "./", new BiFunction<Long, Long, Void>() {
-            @Override
-            public Void apply(Long aLong, Long aLong2) {
-                System.out.println(aLong / (double) aLong2);
-                return null;
-            }
-        });
+        MinecraftServerLauncher instance = MinecraftServerLauncher.getInstance();
+        MinecraftServerManager manager = instance.getManager();
+        System.out.println(manager);
+        MinecraftServerDownloader downloader = instance.getDownloader();
+        System.out.println(downloader);
+        System.out.println("       ");
     }
 }

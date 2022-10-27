@@ -1,35 +1,32 @@
-package com.wuqihang.symcservermanager.mcserverlauncher;
+package com.wuqihang.mcserverlauncher.config;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.thymeleaf.util.StringUtils;
 
 import java.io.File;
-import java.util.Objects;
 
 /**
  * @author Wuqihang
  */
 public class MinecraftServerConfig {
-    @JsonIgnore
-    private int id;
     private String name;
     private String javaPath;
     private String jarPath;
     private String jvmParam;
     private String comment;
     private String serverHomePath;
+    private String version;
 
     public MinecraftServerConfig() {
     }
 
-    public MinecraftServerConfig(int id, String name, String javaPath, String jarPath, String jvmParam, String comment, String serverHomePath) {
-        this.id = id;
+    public MinecraftServerConfig(String name, String javaPath, String jarPath, String jvmParam, String comment, String serverHomePath, String version) {
         this.name = name;
         this.javaPath = javaPath;
         this.jarPath = jarPath;
         this.jvmParam = jvmParam;
         this.comment = comment;
         this.serverHomePath = serverHomePath;
+        this.version = version;
     }
 
     public boolean isLegal() {
@@ -48,21 +45,6 @@ public class MinecraftServerConfig {
         dest.jvmParam = src.jvmParam;
         dest.comment = src.comment;
         dest.serverHomePath = src.serverHomePath;
-    }
-
-    public static MinecraftServerConfig copy(MinecraftServerConfig src) {
-        MinecraftServerConfig minecraftServerConfig = new MinecraftServerConfig();
-        minecraftServerConfig.setId(-1);
-        copy(minecraftServerConfig, src);
-        return minecraftServerConfig;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -113,10 +95,17 @@ public class MinecraftServerConfig {
         this.serverHomePath = serverHomePath;
     }
 
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
     @Override
     public String toString() {
         return "MinecraftServerConfig{" +
-                "id=" + id +
                 ", name='" + name + '\'' +
                 ", javaPath='" + javaPath + '\'' +
                 ", jarPath='" + jarPath + '\'' +

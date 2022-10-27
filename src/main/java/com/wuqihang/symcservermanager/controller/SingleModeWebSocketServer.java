@@ -1,7 +1,7 @@
 package com.wuqihang.symcservermanager.controller;
 
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServer;
-import com.wuqihang.symcservermanager.mcserverlauncher.MinecraftServerMessageListener;
+import com.wuqihang.mcserverlauncher.server.MinecraftServer;
+import com.wuqihang.mcserverlauncher.server.MinecraftServerMessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

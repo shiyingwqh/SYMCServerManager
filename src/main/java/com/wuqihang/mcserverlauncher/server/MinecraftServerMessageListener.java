@@ -1,4 +1,4 @@
-package com.wuqihang.symcservermanager.mcserverlauncher;
+package com.wuqihang.mcserverlauncher.server;
 
 /**
  * @author Wuqihang

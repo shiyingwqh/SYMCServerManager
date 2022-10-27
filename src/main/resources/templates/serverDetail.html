@@ -7,17 +7,25 @@
 <div th:replace="common::navbar(cur=0)"></div>
 <div style="padding-left: 280px">
     <div class="container">
-        <ul th:each="config:${configs}" class="bg-light list-group">
+        <ul class="bg-light list-group">
             <li class="list-group-item">
                 <div th:text="${config.getName()}"></div>
                 <div th:text="${config.getServerHomePath()}"></div>
-                <a th:href="'/server_detail/' + ${config.getName()}" class="btn btn-primary">Detail</a>
             </li>
         </ul>
+        <button class="btn btn-primary" th:data="${config.getName()}" th:onclick="openServer(this.getAttribute('data'))">Start</button>
+        <div th:replace="common::serverTermianl(server=${server})"></div>
     </div>
 </div>
 
 
 <div th:replace="common::foot"></div>
+<script>
+    function openServer(id) {
+        $.post("/start_server?id=" + id, (json) => {
+            console.log(json)
+        })
+    }
+</script>
 </body>
 </html>

@@ -1,38 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="common::head">
 </head>
 <body>
-<div id="xterm"></div>
+
+    <div style="padding: 10px 20px;
+        border-radius: 4px;
+    background-color: #2D2E2C;" id="xterm">
+    </div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/xterm@5.0.0/lib/xterm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm-addon-attach@0.7.0/lib/xterm-addon-attach.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.0.0/css/xterm.css">
+<script src="https://unpkg.com/xterm-addon-webgl@0.12.0-beta.15/lib/xterm-addon-webgl.js"></script>
+<input disabled class="visually-hidden" id="serverId" th:value="${id}">
+<style>
+    .xterm-viewport.xterm-viewport {
+        scrollbar-width: thin;
+    }
+    .xterm-viewport::-webkit-scrollbar {
+        width: 10px;
+    }
+    .xterm-viewport::-webkit-scrollbar-track {
+        opacity: 0;
+    }
+    .xterm-viewport::-webkit-scrollbar-thumb {
+        min-height: 20px;
+        background-color: #ffffff20;
+    }
+</style>
 <script>
 
-    var id = [[${id}]] + ""
+    var id = document.getElementById("serverId").value
 
 
     var socket
-    var term = new Terminal({
-        rendererType: "canvas",
-        rows: parseInt(24),
-        convertEol: true,
-        scrollback: 20,
-        disableStdin: false,
-        cursorStyle: "underline",
-        cursorBlink: true,
-        theme: {
-            foreground: "yellow", //字体
-            background: "#060101", //背景色
-            cursor: "help" //设置光标
-        }
-    });
     // const attachAddon = new AttachAddon(socket);
     // term.loadAddon(attachAddon);
+    var baseTheme = {
+        foreground: '#F8F8F8',
+        background: '#2D2E2C',
+        selection: '#5DA5D533',
+        black: '#1E1E1D',
+        brightBlack: '#262625',
+        red: '#CE5C5C',
+        brightRed: '#FF7272',
+        green: '#5BCC5B',
+        brightGreen: '#72FF72',
+        yellow: '#CCCC5B',
+        brightYellow: '#FFFF72',
+        blue: '#5D5DD3',
+        brightBlue: '#7279FF',
+        magenta: '#BC5ED1',
+        brightMagenta: '#E572FF',
+        cyan: '#5DA5D5',
+        brightCyan: '#72F0FF',
+        white: '#F8F8F8',
+        brightWhite: '#FFFFFF'
+    };
+    var term = new Terminal({
+        fontFamily: '"Cascadia Code", Menlo, monospace',
+        theme: baseTheme,
+        convertEol:true,
+        cursorBlink: true,
+        row:10,
+        columns
+    });
+    var isWebglEnabled = false;
     var command = ''
     term.open(document.getElementById("xterm"));
+    try {
+        const webgl = new WebglAddon.WebglAddon();
+        term.loadAddon(webgl);
+        isWebglEnabled = true;
+    } catch (e) {
+        console.warn('WebGL addon threw an exception during load', e);
+    }
     // 支持输入与粘贴方法
     term.onData(e => {
         switch (e) {
