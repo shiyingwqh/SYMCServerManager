@@ -2,11 +2,13 @@ package com.wuqihang.mcserverlauncher.utils;
 
 import com.wuqihang.mcserverlauncher.config.FabricMinecraftServerConfig;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.jar.JarFile;
@@ -15,7 +17,7 @@ import java.util.jar.JarFile;
  * @author Wuqihang
  */
 public class FabricServerInstaller extends AbstractModServerInstaller {
-    public static Future<FabricMinecraftServerConfig> install(String fabricInstallerJar, boolean downloadMinecraft, FabricMinecraftServerConfig config) {
+    public Future<FabricMinecraftServerConfig> install(String fabricInstallerJar, boolean downloadMinecraft, FabricMinecraftServerConfig config) {
         FutureTask<FabricMinecraftServerConfig> task = new FutureTask<>(() -> {
             String serverPath = new File(config.getServerHomePath()).getAbsolutePath();
             List<String> cmd = new ArrayList<>();
@@ -48,9 +50,11 @@ public class FabricServerInstaller extends AbstractModServerInstaller {
             }
             for (File file : Objects.requireNonNull(new File(config.getServerHomePath()).listFiles())) {
                 if (file.getName().matches(".*.jar")) {
-                    JarFile jarFile = new JarFile(file.getName());
-                    if (jarFile.getManifest().getMainAttributes().get("Main-Class").equals("net.fabricmc.loader.impl.launch.server.FabricServerLauncher")) {
-                        config.setJarPath(file.getAbsolutePath());
+                    try (JarFile jarFile = new JarFile(file.getName())) {
+                        if (jarFile.getManifest().getMainAttributes().get("Main-Class").equals("net.fabricmc.loader.impl.launch.server.FabricServerLaunche\n" +
+                                " r")) {
+                            config.setJarPath(file.getAbsolutePath());
+                        }
                     }
                 }
             }

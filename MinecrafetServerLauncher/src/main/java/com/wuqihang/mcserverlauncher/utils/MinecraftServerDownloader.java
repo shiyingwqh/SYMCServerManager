@@ -9,12 +9,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.*;
-import java.net.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 
 /**
  * @author Wuqihang
@@ -30,7 +37,7 @@ public class MinecraftServerDownloader {
     }
 
     public void init() throws IOException {
-        File file = DataFiles.VERSIONS_JSON;
+        File file = new File("versions.json");
         if (file.exists()) {
             Set<MinecraftServerVersion> versions = mapper.readValue(file, new TypeReference<Set<MinecraftServerVersion>>() {
             });
@@ -107,6 +114,7 @@ public class MinecraftServerDownloader {
                     return false;
                 }
                 inputStream = connection.getInputStream();
+                System.out.println(connection.getResponseMessage());
                 try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
                     byte[] buffer = new byte[8192];
                     int len;
@@ -167,7 +175,7 @@ public class MinecraftServerDownloader {
 
     public void destroy() throws IOException {
         pool.shutdown();
-        File file = DataFiles.VERSIONS_JSON;
+        File file = new File("version.json");
         if (!file.exists()) {
             if (!file.createNewFile()) {
                 return;

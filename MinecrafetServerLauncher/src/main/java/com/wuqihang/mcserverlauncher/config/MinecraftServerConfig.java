@@ -1,9 +1,5 @@
 package com.wuqihang.mcserverlauncher.config;
 
-import org.thymeleaf.util.StringUtils;
-
-import java.io.File;
-
 /**
  * @author Wuqihang
  */
@@ -27,15 +23,6 @@ public class MinecraftServerConfig {
         this.comment = comment;
         this.serverHomePath = serverHomePath;
         this.version = version;
-    }
-
-    public boolean isLegal() {
-        if (StringUtils.isEmptyOrWhitespace(name) ||
-                StringUtils.isEmptyOrWhitespace(jarPath) ||
-                StringUtils.isEmptyOrWhitespace(serverHomePath)) {
-            return false;
-        }
-        return new File(jarPath).exists() && new File(javaPath).exists();
     }
 
     public static void copy(MinecraftServerConfig dest, MinecraftServerConfig src) {

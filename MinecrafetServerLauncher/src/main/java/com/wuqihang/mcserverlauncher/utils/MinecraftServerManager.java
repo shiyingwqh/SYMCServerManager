@@ -1,7 +1,7 @@
 package com.wuqihang.mcserverlauncher.utils;
 
-import com.wuqihang.mcserverlauncher.server.MinecraftServer;
 import com.wuqihang.mcserverlauncher.config.MinecraftServerConfig;
+import com.wuqihang.mcserverlauncher.server.MinecraftServer;
 import com.wuqihang.mcserverlauncher.server.MinecraftServerException;
 
 import java.io.IOException;
@@ -36,6 +36,4 @@ public interface MinecraftServerManager {
     void stopServer(String configName);
 
     void restartServer(String configName);
-
-    ServerCommandProxy getCommandProxy(String configName);
 }

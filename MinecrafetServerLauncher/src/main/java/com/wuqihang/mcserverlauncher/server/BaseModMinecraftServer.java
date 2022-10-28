@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * @author Wuqihang
  */
-public class BaseModMinecraftServer extends MinecraftServerImpl implements ModMinecraftServer {
+public class BaseModMinecraftServer extends MinecraftServerImpl implements MinecraftServerMod {
     private final File MOD_DIR;
 
     public BaseModMinecraftServer(MinecraftServerConfig config) {
