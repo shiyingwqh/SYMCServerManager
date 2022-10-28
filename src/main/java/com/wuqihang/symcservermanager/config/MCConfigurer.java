@@ -83,23 +83,16 @@ public class MCConfigurer {
         return new MinecraftServerImpl(minecraftServerConfig);
     }
 
-    @Bean
-    @ConditionalOnMissingBean(MinecraftServer.class)
-    public MinecraftServerLauncher launcher() {
-        return MinecraftServerLauncher.getInstance();
-    }
-
     @Bean(destroyMethod = "destroy", initMethod = "init")
-    @ConditionalOnBean(MinecraftServerLauncher.class)
-    public MinecraftServerManagerImpl minecraftServerManager(@Autowired MinecraftServerLauncher launcher) {
-        return (MinecraftServerManagerImpl) launcher.getManager();
+    @ConditionalOnMissingBean(MinecraftServer.class)
+    public MinecraftServerManagerImpl minecraftServerManager() {
+        return (MinecraftServerManagerImpl) MinecraftServerLauncher.getManager();
     }
 
     @Bean(initMethod = "init")
-    @ConditionalOnBean(MinecraftServerLauncher.class)
-    public MinecraftServerDownloader minecraftServerDownloader(@Autowired MinecraftServerLauncher launcher) throws IOException{
-        return launcher.getDownloader();
+    @ConditionalOnMissingBean(MinecraftServer.class)
+    public MinecraftServerDownloader minecraftServerDownloader() throws IOException{
+        return MinecraftServerLauncher.getDownloader();
     }
-
 
 }

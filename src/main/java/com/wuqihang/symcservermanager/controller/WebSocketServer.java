@@ -3,7 +3,6 @@ package com.wuqihang.symcservermanager.controller;
 import com.wuqihang.mcserverlauncher.server.MinecraftServer;
 import com.wuqihang.mcserverlauncher.server.MinecraftServerMessageListener;
 import com.wuqihang.mcserverlauncher.utils.MinecraftServerManagerImpl;
-import com.wuqihang.mcserverlauncher.utils.ServerCommandProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,11 +28,9 @@ public class WebSocketServer {
     private MinecraftServer minecraftServer;
     private final static MinecraftServerMessageListener listener = WebSocketServer::listener;
     private static final CopyOnWriteArraySet<WebSocketServer> set = new CopyOnWriteArraySet<>();
-
-    private ServerCommandProxy commandProxy;
     private static MinecraftServerManagerImpl minecraftServerManager;
 
-    private static synchronized void listener(String s)  {
+    private static synchronized void listener(String s) {
         set.forEach(webSocketServer -> {
             webSocketServer.sendMessage(s);
         });
@@ -52,7 +49,6 @@ public class WebSocketServer {
         if (this.minecraftServer == null) {
             return;
         }
-        commandProxy = minecraftServerManager.getCommandProxy(id);
         logger.info(session.getId() + " connected ");
         sendMessage("connected\n");
         minecraftServer.setListener(listener);
@@ -61,10 +57,8 @@ public class WebSocketServer {
     @OnMessage
     public void onMessage(String msg, Session session) {
         if (!StringUtils.isEmptyOrWhitespace(msg)) {
-            if (commandProxy != null) {
-                commandProxy.sendCommand(msg);
-                logger.info("server send: " + msg);
-            }
+            minecraftServer.sendMessage(msg + 'r');
+            logger.info("server send: " + msg);
         }
     }
 
@@ -79,7 +73,7 @@ public class WebSocketServer {
             this.session.getBasicRemote().sendText(msg + "\n");
 //            logger.info(msg);
         } catch (IOException e) {
-            logger.warn("Session " + session.getId() + " Send Message Failed ",e);
+            logger.warn("Session " + session.getId() + " Send Message Failed ", e);
         }
     }
 
