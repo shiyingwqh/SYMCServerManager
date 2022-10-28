@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * @author Wuqihang
  */
-public interface MinecraftServerMod{
+public interface ModMinecraftServer {
     String modPath();
 
     void addMod(File mod) throws IOException;

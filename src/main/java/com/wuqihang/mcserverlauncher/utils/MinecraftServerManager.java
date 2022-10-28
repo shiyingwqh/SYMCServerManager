@@ -36,4 +36,6 @@ public interface MinecraftServerManager {
     void stopServer(String configName);
 
     void restartServer(String configName);
+
+    ServerCommandProxy getCommandProxy(String configName);
 }

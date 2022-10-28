@@ -15,7 +15,7 @@ import java.util.jar.JarFile;
  * @author Wuqihang
  */
 public class FabricServerInstaller extends AbstractModServerInstaller {
-    public Future<FabricMinecraftServerConfig> install(String fabricInstallerJar, boolean downloadMinecraft, FabricMinecraftServerConfig config) {
+    public static Future<FabricMinecraftServerConfig> install(String fabricInstallerJar, boolean downloadMinecraft, FabricMinecraftServerConfig config) {
         FutureTask<FabricMinecraftServerConfig> task = new FutureTask<>(() -> {
             String serverPath = new File(config.getServerHomePath()).getAbsolutePath();
             List<String> cmd = new ArrayList<>();
@@ -49,8 +49,7 @@ public class FabricServerInstaller extends AbstractModServerInstaller {
             for (File file : Objects.requireNonNull(new File(config.getServerHomePath()).listFiles())) {
                 if (file.getName().matches(".*.jar")) {
                     JarFile jarFile = new JarFile(file.getName());
-                    if (jarFile.getManifest().getMainAttributes().get("Main-Class").equals("net.fabricmc.loader.impl.launch.server.FabricServerLaunche\n" +
-                            " r")) {
+                    if (jarFile.getManifest().getMainAttributes().get("Main-Class").equals("net.fabricmc.loader.impl.launch.server.FabricServerLauncher")) {
                         config.setJarPath(file.getAbsolutePath());
                     }
                 }

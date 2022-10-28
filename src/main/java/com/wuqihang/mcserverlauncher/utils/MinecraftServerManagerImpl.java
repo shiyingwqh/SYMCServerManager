@@ -22,6 +22,9 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
 
     private final Map<String, MinecraftServerConfig> configs = new Hashtable<>();
     private final Map<MinecraftServer, MinecraftServerConfig> serverConfigMap = new Hashtable<>();
+
+    private final Map<String, ServerCommandProxy> commandProxies = new Hashtable<>();
+
     private final static ObjectMapper mapper = new ObjectMapper();
 
     private MinecraftServerManagerImpl() {
@@ -29,7 +32,7 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
 
     public void init() {
         try {
-            File file = new File("configs.json");
+            File file = DataFiles.SERVER_CONFIGS_JSON;
             if (file.exists()) {
                 JsonNode minecraftServerConfigs = mapper.readTree(file);
                 for (JsonNode node : minecraftServerConfigs) {
@@ -39,7 +42,7 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
                         ((ForgeMinecraftServerConfig) config).setForgeArgs(node.get("forgeArgs").asText());
                         ((ForgeMinecraftServerConfig) config).setNewly(node.get("newly").asBoolean(false));
                         ((ForgeMinecraftServerConfig) config).setForgeVersion(node.get("forgeVersion").asText());
-                    }else {
+                    } else {
                         config = new MinecraftServerConfig();
                     }
                     config.setName(node.get("name").asText());
@@ -194,9 +197,23 @@ public class MinecraftServerManagerImpl implements MinecraftServerManager {
         }
     }
 
+    @Override
+    public ServerCommandProxy getCommandProxy(String configName) {
+        if (commandProxies.containsKey(configName)) {
+            return commandProxies.get(configName);
+        }
+        if (!servers.containsKey(configName)) {
+            return null;
+        }
+        MinecraftServer minecraftServer = servers.get(configName);
+        ServerCommandProxyImpl proxy = new ServerCommandProxyImpl(minecraftServer);
+        commandProxies.put(configName, proxy);
+        return proxy;
+    }
+
     public void destroy() throws IOException {
         servers.values().forEach(MinecraftServer::destroy);
-        File file = new File("configs.json");
+        File file = DataFiles.SERVER_CONFIGS_JSON;
         boolean newFile = true;
         if (!file.exists()) {
             newFile = file.createNewFile();

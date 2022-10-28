@@ -30,7 +30,7 @@ public class MinecraftServerDownloader {
     }
 
     public void init() throws IOException {
-        File file = new File("versions.json");
+        File file = DataFiles.VERSIONS_JSON;
         if (file.exists()) {
             Set<MinecraftServerVersion> versions = mapper.readValue(file, new TypeReference<Set<MinecraftServerVersion>>() {
             });
@@ -107,7 +107,6 @@ public class MinecraftServerDownloader {
                     return false;
                 }
                 inputStream = connection.getInputStream();
-                System.out.println(connection.getResponseMessage());
                 try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
                     byte[] buffer = new byte[8192];
                     int len;
@@ -168,7 +167,7 @@ public class MinecraftServerDownloader {
 
     public void destroy() throws IOException {
         pool.shutdown();
-        File file = new File("version.json");
+        File file = DataFiles.VERSIONS_JSON;
         if (!file.exists()) {
             if (!file.createNewFile()) {
                 return;

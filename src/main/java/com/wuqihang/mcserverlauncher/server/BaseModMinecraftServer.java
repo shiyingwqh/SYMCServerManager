@@ -1,8 +1,6 @@
 package com.wuqihang.mcserverlauncher.server;
 
 import com.wuqihang.mcserverlauncher.config.MinecraftServerConfig;
-import com.wuqihang.mcserverlauncher.server.MinecraftServerImpl;
-import com.wuqihang.mcserverlauncher.server.MinecraftServerMod;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +12,7 @@ import java.util.List;
 /**
  * @author Wuqihang
  */
-public class BaseModMinecraftServer extends MinecraftServerImpl implements MinecraftServerMod {
+public class BaseModMinecraftServer extends MinecraftServerImpl implements ModMinecraftServer {
     private final File MOD_DIR;
 
     public BaseModMinecraftServer(MinecraftServerConfig config) {
